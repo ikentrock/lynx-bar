@@ -2,9 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>SUFeedURL</key>
-	<string>https://jordanbaird.github.io/ice-releases/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>3nfIGMOD8DALPE8vIdFo2tUOIVc2MVbzhc+2J9JLn+Q=</string>
+	<!--
+	No update feed: Lynx Bar doesn't publish releases yet. To enable updates,
+	add SUFeedURL and SUPublicEDKey for Lynx Bar's own Sparkle feed.
+	-->
 </dict>
 </plist>
