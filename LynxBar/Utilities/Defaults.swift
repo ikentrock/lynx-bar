@@ -142,7 +142,7 @@ extension Defaults {
         case iceIcon = "IceIcon"
         case customIceIconIsTemplate = "CustomIceIconIsTemplate"
         case useIceBar = "UseIceBar"
-        case iceBarLocation = "LynxShelfLocation"
+        case iceBarLocation = "IceBarLocation"
         case showOnClick = "ShowOnClick"
         case showOnHover = "ShowOnHover"
         case showOnScroll = "ShowOnScroll"
