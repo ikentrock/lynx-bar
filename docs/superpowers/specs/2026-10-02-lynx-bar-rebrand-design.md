@@ -94,19 +94,28 @@ These were measured on macOS 26.6.2 with Xcode 27.0 on 2026-10-01/02.
 
 ### 3. Identity and build settings
 
-- `PRODUCT_NAME`/display name "Lynx Bar" for the app, and the bundle IDs above for both
-  targets. The app's executable and bundle become `Lynx Bar.app`; the target and scheme names
-  stay `Ice` until Step 2.
+- App `PRODUCT_NAME = "Lynx Bar"`, so the bundle and executable are `Lynx Bar.app` and Finder
+  and Activity Monitor show "Lynx Bar". `PRODUCT_MODULE_NAME = Ice` is set explicitly, so the
+  Swift module (and anything module-qualified) keeps its name until Step 2. The target and
+  scheme names also stay `Ice` until then.
+- One tracked build setting, `LYNX_BUNDLE_ID = com.ikentrock.LynxBar` in
+  `Config/Base.xcconfig`, drives both targets: the app uses `$(LYNX_BUNDLE_ID)` and the helper
+  `$(LYNX_BUNDLE_ID).MenuBarItemService`.
 - `DEVELOPMENT_TEAM` is emptied for both targets.
-- **Signing config.** An optional, gitignored `Config/Local.xcconfig` (for example
-  `CODE_SIGN_IDENTITY = Luisen`, `CODE_SIGN_STYLE = Manual`) is included from a tracked
-  `Config/Base.xcconfig`. Without it, builds are ad-hoc. Xcode signs nested code (the helper),
-  so nothing is re-signed by hand.
-- `MenuBarItemService.name` becomes the single source of the helper's identifier. A build
-  phase (run script) fails the build if it differs from the helper's built
-  `CFBundleIdentifier`, so the mismatch that broke the spike's first runs can't recur
-  silently. The host identifier is derived from it (the name without the
-  `.MenuBarItemService` suffix).
+- **Signing config.** A tracked `Config/Base.xcconfig` optionally includes a gitignored
+  `Config/Local.xcconfig` (`#include? "Local.xcconfig"`) containing, for example,
+  `CODE_SIGN_IDENTITY = Luisen` and `CODE_SIGN_STYLE = Manual`. Without it, builds are ad-hoc.
+  Xcode signs nested code (the helper), so nothing is re-signed by hand.
+  - Verified on the spike: `xcodebuild CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=Luisen
+    DEVELOPMENT_TEAM=` signs both the app and the embedded helper with the self-signed
+    certificate, even though Keychain reports it as not trusted. No "Always Trust" step is
+    needed.
+- **No hardcoded helper name.** The identifiers are derived at runtime, so there's no
+  constant to drift (the mismatch that broke the spike's first runs):
+  - The app computes the service name as `Bundle.main.bundleIdentifier + ".MenuBarItemService"`.
+  - The helper computes its host identifier by removing that suffix from its own bundle
+    identifier.
+  - `MenuBarItemService.name` becomes a computed property.
 - `MARKETING_VERSION = 0.12.0` and the copyright string are set in the build settings.
 
 ### 4. Helper trust: same certificate + expected identifier
@@ -138,7 +147,7 @@ Each side computes its peer requirement **from its own signature** at launch:
 - **When the connection is refused** (ad-hoc build or a mismatched signature), the app logs
   the reason once and the Ice Bar, Layout pane and search show "Lynx Bar's helper couldn't
   start. Build Lynx Bar with a signing certificate (see README)." in place of a spinner that
-  never ends.
+  never ends. In this state the item manager neither caches nor moves items.
 
 ### 5. Updates (off, ready to switch on)
 
@@ -152,9 +161,11 @@ Each side computes its peer requirement **from its own signature** at launch:
 - New `IceSettingsImporter` runs at launch **before** `Migration.migrateAll()`. Ice's stored
   formats then still pass through upstream's migrations (for example `migrate0_11_13`, which
   rewrites control item position keys).
-- The import runs only if `UserDefaults(suiteName: "com.jordanbaird.Ice")` has data, Lynx
-  Bar's own domain has no app keys, and `hasImportedIceSettings` isn't set. It copies every
-  key, then sets that flag. Ice's domain is only read.
+- The import runs only if `hasImportedIceSettings` isn't set and
+  `UserDefaults(suiteName: "com.jordanbaird.Ice")` has data. It copies every key that Lynx Bar
+  doesn't already have, then sets the flag. Ice's domain is only read. It deliberately
+  doesn't check for an "empty" Lynx Bar domain, because anything that writes a default before
+  the importer runs would silently skip the import.
 - Login-item state is stored per app by macOS, so it isn't imported and starts off.
 - Accessibility and Screen Recording must be granted again, because macOS ties them to the
   bundle ID. The existing permissions window covers this.
@@ -224,5 +235,13 @@ development Mac.
   problems are written down for later specs.
 - **The C XPC API is less ergonomic** than `XPCSession`. Mitigation: it's limited to two files
   behind an unchanged `Connection` API.
+- **Untested on macOS 14/15.** Applying the peer requirement there changes behavior that
+  upstream left unchecked, and only macOS 26 is available for testing. Mitigation: the code
+  path is identical on every version; regressions get reported and fixed later.
+- **The spike moved a real menu bar item.** During a negative-test run the item manager logged
+  moving the OneDrive item next to the Microsoft 365 Copilot item, presumably while enforcing
+  the section order. Item moves on a half-working connection are a hazard. Mitigation: when
+  the helper is refused, the item manager must not move items (part of the "helper couldn't
+  start" state in section 4).
 - **No upstream merges.** Upstream is effectively abandoned, so later upstream changes won't
   merge cleanly after Step 2. This is accepted.
