@@ -1,33 +1,33 @@
 //
-//  IceSection.swift
+//  LynxSection.swift
 //  Ice
 //
 
 import SwiftUI
 
-struct IceSectionOptions: OptionSet {
+struct LynxSectionOptions: OptionSet {
     let rawValue: Int
 
-    static let isBordered = IceSectionOptions(rawValue: 1 << 0)
-    static let hasDividers = IceSectionOptions(rawValue: 1 << 1)
+    static let isBordered = LynxSectionOptions(rawValue: 1 << 0)
+    static let hasDividers = LynxSectionOptions(rawValue: 1 << 1)
 
-    static let plain: IceSectionOptions = []
-    static let `default`: IceSectionOptions = [.isBordered, .hasDividers]
+    static let plain: LynxSectionOptions = []
+    static let `default`: LynxSectionOptions = [.isBordered, .hasDividers]
 }
 
-struct IceSection<Header: View, Content: View, Footer: View>: View {
+struct LynxSection<Header: View, Content: View, Footer: View>: View {
     private let header: Header
     private let content: Content
     private let footer: Footer
     private let spacing: CGFloat
-    private let options: IceSectionOptions
+    private let options: LynxSectionOptions
 
     private var isBordered: Bool { options.contains(.isBordered) }
     private var hasDividers: Bool { options.contains(.hasDividers) }
 
     init(
         spacing: CGFloat = .iceSectionDefaultSpacing,
-        options: IceSectionOptions = .default,
+        options: LynxSectionOptions = .default,
         @ViewBuilder header: () -> Header,
         @ViewBuilder content: () -> Content,
         @ViewBuilder footer: () -> Footer
@@ -41,7 +41,7 @@ struct IceSection<Header: View, Content: View, Footer: View>: View {
 
     init(
         spacing: CGFloat = .iceSectionDefaultSpacing,
-        options: IceSectionOptions = .default,
+        options: LynxSectionOptions = .default,
         @ViewBuilder content: () -> Content,
         @ViewBuilder footer: () -> Footer
     ) where Header == EmptyView {
@@ -56,7 +56,7 @@ struct IceSection<Header: View, Content: View, Footer: View>: View {
 
     init(
         spacing: CGFloat = .iceSectionDefaultSpacing,
-        options: IceSectionOptions = .default,
+        options: LynxSectionOptions = .default,
         @ViewBuilder header: () -> Header,
         @ViewBuilder content: () -> Content
     ) where Footer == EmptyView {
@@ -71,7 +71,7 @@ struct IceSection<Header: View, Content: View, Footer: View>: View {
 
     init(
         spacing: CGFloat = .iceSectionDefaultSpacing,
-        options: IceSectionOptions = .default,
+        options: LynxSectionOptions = .default,
         @ViewBuilder content: () -> Content
     ) where Header == EmptyView, Footer == EmptyView {
         self.init(spacing: spacing, options: options) {
@@ -86,7 +86,7 @@ struct IceSection<Header: View, Content: View, Footer: View>: View {
     init(
         _ title: LocalizedStringKey,
         spacing: CGFloat = .iceSectionDefaultSpacing,
-        options: IceSectionOptions = .default,
+        options: LynxSectionOptions = .default,
         @ViewBuilder content: () -> Content
     ) where Header == Text, Footer == EmptyView {
         self.init(spacing: spacing, options: options) {
@@ -99,7 +99,7 @@ struct IceSection<Header: View, Content: View, Footer: View>: View {
     var body: some View {
         Section {
             if isBordered {
-                IceGroupBox {
+                LynxGroupBox {
                     header
                 } content: {
                     contentLayout
@@ -130,7 +130,7 @@ struct IceSection<Header: View, Content: View, Footer: View>: View {
     @ViewBuilder
     private var contentLayout: some View {
         if hasDividers {
-            _VariadicView.Tree(IceSectionLayout(spacing: spacing)) {
+            _VariadicView.Tree(LynxSectionLayout(spacing: spacing)) {
                 content.frame(maxWidth: .infinity)
             }
         } else {
@@ -139,9 +139,9 @@ struct IceSection<Header: View, Content: View, Footer: View>: View {
     }
 }
 
-// MARK: - IceSectionLayout
+// MARK: - LynxSectionLayout
 
-private struct IceSectionLayout: _VariadicView_UnaryViewRoot {
+private struct LynxSectionLayout: _VariadicView_UnaryViewRoot {
     let spacing: CGFloat
 
     @ViewBuilder
@@ -151,16 +151,16 @@ private struct IceSectionLayout: _VariadicView_UnaryViewRoot {
             ForEach(children) { child in
                 child
                 if child.id != last {
-                    IceSectionDivider()
+                    LynxSectionDivider()
                 }
             }
         }
     }
 }
 
-// MARK: - IceSectionDivider
+// MARK: - LynxSectionDivider
 
-private struct IceSectionDivider: View {
+private struct LynxSectionDivider: View {
     var body: some View {
         if #available(macOS 26.0, *) {
             Rectangle()
@@ -173,6 +173,6 @@ private struct IceSectionDivider: View {
 }
 
 extension CGFloat {
-    /// The default spacing for an ``IceSection``.
+    /// The default spacing for an ``LynxSection``.
     static let iceSectionDefaultSpacing: CGFloat = if #available(macOS 26.0, *) { 11 } else { 10 }
 }

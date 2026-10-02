@@ -1,5 +1,5 @@
 //
-//  IceColor.swift
+//  LynxColor.swift
 //  Ice
 //
 
@@ -7,13 +7,13 @@ import CoreGraphics
 import Foundation
 
 /// A custom color.
-struct IceColor: Hashable {
+struct LynxColor: Hashable {
     /// The color, represented as a `CGColor`.
     var cgColor: CGColor
 }
 
-// MARK: IceColor: Codable
-extension IceColor: Codable {
+// MARK: LynxColor: Codable
+extension LynxColor: Codable {
     private enum CodingKeys: CodingKey {
         case components
         case colorSpace

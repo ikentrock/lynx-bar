@@ -1,13 +1,13 @@
 //
-//  IceGradientPicker.swift
+//  LynxGradientPicker.swift
 //  Ice
 //
 
 import Combine
 import SwiftUI
 
-struct IceGradientPicker<Label: View>: View {
-    @Binding private var gradient: IceGradient
+struct LynxGradientPicker<Label: View>: View {
+    @Binding private var gradient: LynxGradient
     @State private var selection: Int?
     @State private var cancellable: AnyCancellable?
 
@@ -15,7 +15,7 @@ struct IceGradientPicker<Label: View>: View {
     private let label: Label
 
     init(
-        gradient: Binding<IceGradient>,
+        gradient: Binding<LynxGradient>,
         supportsOpacity: Bool = true,
         @ViewBuilder label: () -> Label
     ) {
@@ -26,7 +26,7 @@ struct IceGradientPicker<Label: View>: View {
 
     init(
         _ labelKey: LocalizedStringKey,
-        gradient: Binding<IceGradient>,
+        gradient: Binding<LynxGradient>,
         supportsOpacity: Bool = true
     ) where Label == Text {
         self._gradient = gradient
@@ -41,7 +41,7 @@ struct IceGradientPicker<Label: View>: View {
     ///   - supportsOpacity: A Boolean value indicating whether the
     ///     picker should support opacity.
     init(
-        gradient: Binding<IceGradient>,
+        gradient: Binding<LynxGradient>,
         supportsOpacity: Bool = true
     ) where Label == EmptyView {
         self._gradient = gradient
@@ -51,7 +51,7 @@ struct IceGradientPicker<Label: View>: View {
 
     var body: some View {
         LabeledContent {
-            IceGradientPickerRoot(
+            LynxGradientPickerRoot(
                 gradient: $gradient,
                 selection: $selection,
                 supportsOpacity: supportsOpacity
@@ -72,10 +72,10 @@ struct IceGradientPicker<Label: View>: View {
     }
 }
 
-private struct IceGradientPickerRoot: View {
+private struct LynxGradientPickerRoot: View {
     @Environment(\.isEnabled) private var isEnabled
 
-    @Binding var gradient: IceGradient
+    @Binding var gradient: LynxGradient
     @Binding var selection: Int?
     @State private var lastUpdated: Int?
     @State private var cancellables = Set<AnyCancellable>()
@@ -159,7 +159,7 @@ private struct IceGradientPickerRoot: View {
     @ViewBuilder
     private func handles(geometry: GeometryProxy) -> some View {
         ForEach(gradient.stops.indices, id: \.self) { index in
-            IceGradientPickerHandle(
+            LynxGradientPickerHandle(
                 gradient: $gradient,
                 selection: $selection,
                 lastUpdated: $lastUpdated,
@@ -187,7 +187,7 @@ private struct IceGradientPickerRoot: View {
         }
     }
 
-    private func gradientChanged(from oldValue: IceGradient, to newValue: IceGradient) {
+    private func gradientChanged(from oldValue: LynxGradient, to newValue: LynxGradient) {
         guard oldValue != newValue else {
             return
         }
@@ -306,8 +306,8 @@ private struct IceGradientPickerRoot: View {
     }
 }
 
-private struct IceGradientPickerHandle: View {
-    @Binding var gradient: IceGradient
+private struct LynxGradientPickerHandle: View {
+    @Binding var gradient: LynxGradient
     @Binding var selection: Int?
     @Binding var lastUpdated: Int?
 
@@ -323,7 +323,7 @@ private struct IceGradientPickerHandle: View {
         index == lastUpdated
     }
 
-    private var stop: IceGradient.ColorStop? {
+    private var stop: LynxGradient.ColorStop? {
         guard gradient.stops.indices.contains(index) else {
             return nil
         }

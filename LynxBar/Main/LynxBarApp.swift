@@ -1,12 +1,12 @@
 //
-//  IceApp.swift
+//  LynxBarApp.swift
 //  Ice
 //
 
 import SwiftUI
 
 @main
-struct IceApp: App {
+struct LynxBarApp: App {
     @NSApplicationDelegateAdaptor var appDelegate: AppDelegate
 
     var body: some Scene {

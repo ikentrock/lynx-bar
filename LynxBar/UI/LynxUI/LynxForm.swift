@@ -1,11 +1,11 @@
 //
-//  IceForm.swift
+//  LynxForm.swift
 //  Ice
 //
 
 import SwiftUI
 
-struct IceForm<Content: View>: View {
+struct LynxForm<Content: View>: View {
     @State private var contentFrame = CGRect.zero
 
     private let alignment: HorizontalAlignment
@@ -61,15 +61,15 @@ struct IceForm<Content: View>: View {
     private var contentLayout: some View {
         VStack(alignment: alignment, spacing: spacing) {
             content
-                .labeledContentStyle(IceFormLabeledContentStyle())
-                .toggleStyle(IceFormToggleStyle())
+                .labeledContentStyle(LynxFormLabeledContentStyle())
+                .toggleStyle(LynxFormToggleStyle())
         }
         .padding(padding)
         .onFrameChange(update: $contentFrame)
     }
 }
 
-private struct IceFormLabeledContentStyle: LabeledContentStyle {
+private struct LynxFormLabeledContentStyle: LabeledContentStyle {
     func makeBody(configuration: Configuration) -> some View {
         LabeledContent {
             configuration.content
@@ -82,7 +82,7 @@ private struct IceFormLabeledContentStyle: LabeledContentStyle {
     }
 }
 
-private struct IceFormToggleStyle: ToggleStyle {
+private struct LynxFormToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         Toggle(configuration)
             .toggleStyle(.switch)
@@ -91,7 +91,7 @@ private struct IceFormToggleStyle: ToggleStyle {
 }
 
 extension EdgeInsets {
-    /// The default padding for an ``IceForm``.
+    /// The default padding for an ``LynxForm``.
     static let iceFormDefaultPadding: EdgeInsets = {
         var insets = EdgeInsets(all: 20)
         if #available(macOS 26.0, *) {
@@ -102,6 +102,6 @@ extension EdgeInsets {
 }
 
 extension CGFloat {
-    /// The default spacing for an ``IceForm``.
+    /// The default spacing for an ``LynxForm``.
     static let iceFormDefaultSpacing: CGFloat = 10
 }

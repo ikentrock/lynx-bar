@@ -24,19 +24,19 @@ struct AdvancedSettingsPane: View {
     }
 
     var body: some View {
-        IceForm {
-            IceSection("Menu Bar Sections") {
+        LynxForm {
+            LynxSection("Menu Bar Sections") {
                 enableAlwaysHiddenSection
                 showAllSectionsOnUserDrag
                 sectionDividerStyle
             }
-            IceSection("Other") {
+            LynxSection("Other") {
                 hideApplicationMenus
                 enableSecondaryContextMenu
                 showOnHoverDelay
                 tempShowInterval
             }
-            IceSection("Permissions") {
+            LynxSection("Permissions") {
                 allPermissions
             }
         }
@@ -60,7 +60,7 @@ struct AdvancedSettingsPane: View {
 
     @ViewBuilder
     private var sectionDividerStyle: some View {
-        IcePicker("Section divider style", selection: $settings.sectionDividerStyle) {
+        LynxPicker("Section divider style", selection: $settings.sectionDividerStyle) {
             ForEach(SectionDividerStyle.allCases) { style in
                 Text(style.localized).tag(style)
             }
@@ -106,7 +106,7 @@ struct AdvancedSettingsPane: View {
     @ViewBuilder
     private var showOnHoverDelay: some View {
         LabeledContent {
-            IceSlider(
+            LynxSlider(
                 formattedToSeconds(settings.showOnHoverDelay),
                 value: $settings.showOnHoverDelay,
                 in: 0...1,
@@ -125,7 +125,7 @@ struct AdvancedSettingsPane: View {
     @ViewBuilder
     private var tempShowInterval: some View {
         LabeledContent {
-            IceSlider(
+            LynxSlider(
                 formattedToSeconds(settings.tempShowInterval),
                 value: $settings.tempShowInterval,
                 in: 0...60,

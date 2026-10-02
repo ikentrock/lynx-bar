@@ -1,5 +1,5 @@
 //
-//  IceBar.swift
+//  LynxShelf.swift
 //  Ice
 //
 
@@ -7,14 +7,14 @@ import Combine
 import OSLog
 import SwiftUI
 
-// MARK: - IceBarPanel
+// MARK: - LynxShelfPanel
 
-final class IceBarPanel: NSPanel {
+final class LynxShelfPanel: NSPanel {
     /// The shared app state.
     private weak var appState: AppState?
 
     /// Manager for the Ice Bar's color.
-    private let colorManager = IceBarColorManager()
+    private let colorManager = LynxShelfColorManager()
 
     /// The currently displayed section.
     private(set) var currentSection: MenuBarSection.Name?
@@ -108,7 +108,7 @@ final class IceBarPanel: NSPanel {
             return
         }
 
-        func getOrigin(for iceBarLocation: IceBarLocation) -> CGPoint {
+        func getOrigin(for iceBarLocation: LynxShelfLocation) -> CGPoint {
             let menuBarHeight = screen.getMenuBarHeight() ?? 0
             let originY = ((screen.frame.maxY - 1) - menuBarHeight) - frame.height
 
@@ -176,10 +176,10 @@ final class IceBarPanel: NSPanel {
         do {
             try await cacheTask.value
         } catch {
-            Logger.default.error("Cache update failed when showing IceBarPanel - \(error)")
+            Logger.default.error("Cache update failed when showing LynxShelfPanel - \(error)")
         }
 
-        contentView = IceBarHostingView(
+        contentView = LynxShelfHostingView(
             appState: appState,
             colorManager: colorManager,
             screen: screen,
@@ -218,18 +218,18 @@ final class IceBarPanel: NSPanel {
     }
 }
 
-// MARK: - IceBarHostingView
+// MARK: - LynxShelfHostingView
 
-private final class IceBarHostingView: NSHostingView<IceBarContentView> {
+private final class LynxShelfHostingView: NSHostingView<LynxShelfContentView> {
     override var safeAreaInsets: NSEdgeInsets { NSEdgeInsets() }
 
     init(
         appState: AppState,
-        colorManager: IceBarColorManager,
+        colorManager: LynxShelfColorManager,
         screen: NSScreen,
         section: MenuBarSection.Name
     ) {
-        let rootView = IceBarContentView(
+        let rootView = LynxShelfContentView(
             appState: appState,
             colorManager: colorManager,
             itemManager: appState.itemManager,
@@ -247,7 +247,7 @@ private final class IceBarHostingView: NSHostingView<IceBarContentView> {
     }
 
     @available(*, unavailable)
-    required init(rootView: IceBarContentView) {
+    required init(rootView: LynxShelfContentView) {
         fatalError("init(rootView:) has not been implemented")
     }
 
@@ -256,11 +256,11 @@ private final class IceBarHostingView: NSHostingView<IceBarContentView> {
     }
 }
 
-// MARK: - IceBarContentView
+// MARK: - LynxShelfContentView
 
-private struct IceBarContentView: View {
+private struct LynxShelfContentView: View {
     @ObservedObject var appState: AppState
-    @ObservedObject var colorManager: IceBarColorManager
+    @ObservedObject var colorManager: LynxShelfColorManager
     @ObservedObject var itemManager: MenuBarItemManager
     @ObservedObject var imageCache: MenuBarItemImageCache
     @ObservedObject var menuBarManager: MenuBarManager
@@ -378,7 +378,7 @@ private struct IceBarContentView: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 0) {
                     ForEach(items, id: \.windowID) { item in
-                        IceBarItemView(
+                        LynxShelfItemView(
                             imageCache: imageCache,
                             itemManager: itemManager,
                             menuBarManager: menuBarManager,
@@ -398,9 +398,9 @@ private struct IceBarContentView: View {
     }
 }
 
-// MARK: - IceBarItemView
+// MARK: - LynxShelfItemView
 
-private struct IceBarItemView: View {
+private struct LynxShelfItemView: View {
     @ObservedObject var imageCache: MenuBarItemImageCache
     @ObservedObject var itemManager: MenuBarItemManager
     @ObservedObject var menuBarManager: MenuBarManager
@@ -454,7 +454,7 @@ private struct IceBarItemView: View {
             Image(nsImage: image)
                 .contentShape(Rectangle())
                 .overlay {
-                    IceBarItemClickView(
+                    LynxShelfItemClickView(
                         item: item,
                         leftClickAction: leftClickAction,
                         rightClickAction: rightClickAction
@@ -467,9 +467,9 @@ private struct IceBarItemView: View {
     }
 }
 
-// MARK: - IceBarItemClickView
+// MARK: - LynxShelfItemClickView
 
-private struct IceBarItemClickView: NSViewRepresentable {
+private struct LynxShelfItemClickView: NSViewRepresentable {
     private final class Represented: NSView {
         let item: MenuBarItem
 

@@ -32,7 +32,7 @@ final class GeneralSettings: ObservableObject {
     @Published var useIceBar = false
 
     /// The location where the Ice Bar appears.
-    @Published var iceBarLocation: IceBarLocation = .dynamic
+    @Published var iceBarLocation: LynxShelfLocation = .dynamic
 
     /// A Boolean value that indicates whether the hidden section
     /// should be shown when the mouse pointer clicks in an empty
@@ -95,7 +95,7 @@ final class GeneralSettings: ObservableObject {
         Defaults.ifPresent(key: .rehideInterval, assign: &rehideInterval)
 
         Defaults.ifPresent(key: .iceBarLocation) { rawValue in
-            if let location = IceBarLocation(rawValue: rawValue) {
+            if let location = LynxShelfLocation(rawValue: rawValue) {
                 iceBarLocation = location
             }
         }

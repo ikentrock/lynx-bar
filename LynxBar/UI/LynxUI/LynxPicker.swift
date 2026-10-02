@@ -1,11 +1,11 @@
 //
-//  IcePicker.swift
+//  LynxPicker.swift
 //  Ice
 //
 
 import SwiftUI
 
-struct IcePicker<Label: View, SelectionValue: Hashable, Content: View>: View {
+struct LynxPicker<Label: View, SelectionValue: Hashable, Content: View>: View {
     @Binding var selection: SelectionValue
 
     let label: Label

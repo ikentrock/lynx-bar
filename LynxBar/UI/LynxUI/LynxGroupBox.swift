@@ -1,11 +1,11 @@
 //
-//  IceGroupBox.swift
+//  LynxGroupBox.swift
 //  Ice
 //
 
 import SwiftUI
 
-struct IceGroupBox<Header: View, Content: View, Footer: View>: View {
+struct LynxGroupBox<Header: View, Content: View, Footer: View>: View {
     private let header: Header
     private let content: Content
     private let footer: Footer
@@ -191,6 +191,6 @@ struct IceGroupBox<Header: View, Content: View, Footer: View>: View {
 }
 
 extension EdgeInsets {
-    /// The default padding for an ``IceGroupBox``.
+    /// The default padding for an ``LynxGroupBox``.
     static let iceGroupBoxDefaultPadding = EdgeInsets(all: 12)
 }

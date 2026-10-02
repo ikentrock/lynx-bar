@@ -1,12 +1,12 @@
 //
-//  IceSlider.swift
+//  LynxSlider.swift
 //  Ice
 //
 
 import CompactSlider
 import SwiftUI
 
-struct IceSlider<Value: BinaryFloatingPoint, ValueLabel: View>: View {
+struct LynxSlider<Value: BinaryFloatingPoint, ValueLabel: View>: View {
     @Binding private var value: Value
 
     private let bounds: ClosedRange<Value>

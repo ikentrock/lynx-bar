@@ -41,7 +41,7 @@ final class MenuBarManager: ObservableObject {
     private var isHidingApplicationMenus = false
 
     /// The panel that contains the Ice Bar interface.
-    let iceBarPanel = IceBarPanel()
+    let iceBarPanel = LynxShelfPanel()
 
     /// The panel that contains the menu bar search interface.
     let searchPanel = MenuBarSearchPanel()

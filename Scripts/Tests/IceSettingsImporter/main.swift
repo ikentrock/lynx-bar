@@ -18,20 +18,20 @@ func withScratchDefaults(_ body: (UserDefaults) -> Void) {
 
 // Imports everything on first run and sets the flag.
 withScratchDefaults { defaults in
-    let source: [String: Any] = ["UseIceBar": true, "IceBarLocation": 2, "Ice.ControlItem.Hidden": 481]
+    let source: [String: Any] = ["UseIceBar": true, "LynxShelfLocation": 2, "Ice.ControlItem.Hidden": 481]
     let outcome = IceSettingsImporter.importIfNeeded(source: source, into: defaults)
     expect(outcome == .imported(keyCount: 3), "imports all keys (got \(outcome))")
     expect(defaults.bool(forKey: "UseIceBar"), "copies a Bool")
-    expect(defaults.integer(forKey: "IceBarLocation") == 2, "copies an Int")
+    expect(defaults.integer(forKey: "LynxShelfLocation") == 2, "copies an Int")
     expect(defaults.bool(forKey: IceSettingsImporter.importedFlagKey), "sets the flag")
 }
 
 // Never overwrites values Lynx Bar already has.
 withScratchDefaults { defaults in
-    defaults.set(5, forKey: "IceBarLocation")
-    let outcome = IceSettingsImporter.importIfNeeded(source: ["IceBarLocation": 2, "UseIceBar": true], into: defaults)
+    defaults.set(5, forKey: "LynxShelfLocation")
+    let outcome = IceSettingsImporter.importIfNeeded(source: ["LynxShelfLocation": 2, "UseIceBar": true], into: defaults)
     expect(outcome == .imported(keyCount: 1), "imports only missing keys (got \(outcome))")
-    expect(defaults.integer(forKey: "IceBarLocation") == 5, "keeps the existing value")
+    expect(defaults.integer(forKey: "LynxShelfLocation") == 5, "keeps the existing value")
 }
 
 // Runs only once.
