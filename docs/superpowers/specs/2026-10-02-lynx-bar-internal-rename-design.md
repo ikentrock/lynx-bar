@@ -23,7 +23,7 @@ accepted this; upstream is effectively abandoned).
 |---|---|
 | Naming scheme | `Lynx` prefix for the shared UI kit and colors, `LynxShelf` for the bar family, `LynxBar` for the app and project |
 | Folder, project | `Ice/` → `LynxBar/`, `Ice.xcodeproj` → `LynxBar.xcodeproj` |
-| Scheme, target, module | `LynxBar`. `PRODUCT_MODULE_NAME` is removed (the module follows the target name). `PRODUCT_NAME` stays `"Lynx Bar"`. |
+| Scheme, target, module | `LynxBar`. `PRODUCT_MODULE_NAME = LynxBar` is set explicitly; without it, the module would default to `Lynx_Bar`, from `PRODUCT_NAME`. `PRODUCT_NAME` stays `"Lynx Bar"`. |
 | File header | `//  LynxBar` for files under `LynxBar/` (Shared and helper keep their folder names) |
 | Method | Scripted rename from an explicit name table, in four commits, each built and tested |
 
