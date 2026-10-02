@@ -1,6 +1,6 @@
 //
 //  LynxGradient.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

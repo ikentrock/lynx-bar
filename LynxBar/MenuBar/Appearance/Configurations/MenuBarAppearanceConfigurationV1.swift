@@ -1,6 +1,6 @@
 //
 //  MenuBarAppearanceConfigurationV1.swift
-//  Ice
+//  LynxBar
 //
 
 import CoreGraphics

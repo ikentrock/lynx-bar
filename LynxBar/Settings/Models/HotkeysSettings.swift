@@ -1,6 +1,6 @@
 //
 //  HotkeysSettings.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

@@ -1,6 +1,6 @@
 //
 //  LayoutBarPaddingView.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

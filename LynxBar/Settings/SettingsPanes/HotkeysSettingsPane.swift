@@ -1,6 +1,6 @@
 //
 //  HotkeysSettingsPane.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

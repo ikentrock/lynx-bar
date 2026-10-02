@@ -1,6 +1,6 @@
 //
 //  MouseHelpers.swift
-//  Ice
+//  LynxBar
 //
 
 import CoreGraphics

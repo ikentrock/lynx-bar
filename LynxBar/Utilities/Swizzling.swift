@@ -1,6 +1,6 @@
 //
 //  Swizzling.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

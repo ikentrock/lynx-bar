@@ -56,7 +56,7 @@ file_header:
   required_pattern: |-
     //
     //  SWIFTLINT_CURRENT_FILENAME
-    //  Ice
+    //  LynxBar
     //
 
 modifier_order:

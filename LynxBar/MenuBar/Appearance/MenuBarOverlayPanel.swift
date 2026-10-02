@@ -1,6 +1,6 @@
 //
 //  MenuBarOverlayPanel.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

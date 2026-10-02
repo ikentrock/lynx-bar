@@ -1,6 +1,6 @@
 //
 //  SpaceInfo.swift
-//  Ice
+//  LynxBar
 //
 
 import CoreGraphics

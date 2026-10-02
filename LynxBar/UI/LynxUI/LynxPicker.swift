@@ -1,6 +1,6 @@
 //
 //  LynxPicker.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

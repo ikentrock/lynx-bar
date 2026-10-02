@@ -1,6 +1,6 @@
 //
 //  AnnotationView.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

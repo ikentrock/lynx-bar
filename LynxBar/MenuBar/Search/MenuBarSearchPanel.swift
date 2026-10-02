@@ -1,6 +1,6 @@
 //
 //  MenuBarSearchPanel.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

@@ -1,6 +1,6 @@
 //
 //  AppState.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

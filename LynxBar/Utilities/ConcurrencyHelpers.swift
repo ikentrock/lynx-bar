@@ -1,6 +1,6 @@
 //
 //  ConcurrencyHelpers.swift
-//  Ice
+//  LynxBar
 //
 
 import Foundation

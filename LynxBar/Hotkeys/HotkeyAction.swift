@@ -1,6 +1,6 @@
 //
 //  HotkeyAction.swift
-//  Ice
+//  LynxBar
 //
 
 enum HotkeyAction: String, Codable, CaseIterable {

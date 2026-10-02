@@ -1,6 +1,6 @@
 //
 //  AnyInsettableShape.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

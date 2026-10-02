@@ -1,6 +1,6 @@
 //
 //  GeneralSettings.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine
@@ -12,7 +12,7 @@ import SwiftUI
 /// Model for the app's General settings.
 @MainActor
 final class GeneralSettings: ObservableObject {
-    /// A Boolean value that indicates whether the Ice icon
+    /// A Boolean value that indicates whether the Lynx icon
     /// should be shown.
     @Published var showLynxIcon = true
 
@@ -20,10 +20,10 @@ final class GeneralSettings: ObservableObject {
     /// for when items are visible or hidden.
     @Published var lynxIcon: ControlItemImageSet = .defaultLynxIcon
 
-    /// The last user-selected custom Ice icon.
+    /// The last user-selected custom Lynx icon.
     @Published var lastCustomLynxIcon: ControlItemImageSet?
 
-    /// A Boolean value that indicates whether custom Ice icons
+    /// A Boolean value that indicates whether custom Lynx icons
     /// should be rendered as template images.
     @Published var customLynxIconIsTemplate = false
 
@@ -31,7 +31,7 @@ final class GeneralSettings: ObservableObject {
     /// in a separate bar below the menu bar.
     @Published var useLynxShelf = false
 
-    /// The location where the Ice Bar appears.
+    /// The location where the Lynx Shelf appears.
     @Published var lynxShelfLocation: LynxShelfLocation = .dynamic
 
     /// A Boolean value that indicates whether the hidden section
@@ -109,7 +109,7 @@ final class GeneralSettings: ObservableObject {
             do {
                 lynxIcon = try decoder.decode(ControlItemImageSet.self, from: data)
             } catch {
-                Logger.serialization.error("Error decoding Ice icon: \(error, privacy: .public)")
+                Logger.serialization.error("Error decoding Lynx icon: \(error, privacy: .public)")
             }
             if case .custom = lynxIcon.name {
                 lastCustomLynxIcon = lynxIcon
@@ -141,7 +141,7 @@ final class GeneralSettings: ObservableObject {
                     let data = try encoder.encode(lynxIcon)
                     Defaults.set(data, forKey: .lynxIcon)
                 } catch {
-                    Logger.serialization.error("Error encoding Ice icon: \(error, privacy: .public)")
+                    Logger.serialization.error("Error encoding Lynx icon: \(error, privacy: .public)")
                 }
             }
             .store(in: &c)

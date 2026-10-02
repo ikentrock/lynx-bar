@@ -1,6 +1,6 @@
 //
 //  MenuBarItemServiceConnection.swift
-//  Ice
+//  LynxBar
 //
 
 import Foundation

@@ -1,6 +1,6 @@
 //
 //  MenuBarLayoutSettingsPane.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

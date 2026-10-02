@@ -1,6 +1,6 @@
 //
 //  UserNotificationManager.swift
-//  Ice
+//  LynxBar
 //
 
 import OSLog

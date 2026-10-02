@@ -1,6 +1,6 @@
 //
 //  MenuBarItemTag.swift
-//  Ice
+//  LynxBar
 //
 
 import CoreGraphics
@@ -30,7 +30,7 @@ struct MenuBarItemTag: Hashable, CustomStringConvertible {
     }
 
     /// A Boolean value that indicates whether the item identified
-    /// by this tag is a control item owned by Ice.
+    /// by this tag is a control item owned by Lynx Bar.
     var isControlItem: Bool {
         MenuBarItemTag.controlItems.contains(self)
     }
@@ -107,18 +107,18 @@ extension MenuBarItemTag {
         return items
     }()
 
-    /// An array of tags for items representing Ice's control items.
+    /// An array of tags for items representing Lynx Bar's control items.
     static let controlItems = ControlItem.Identifier.allCases.map { $0.tag }
 
     // MARK: Control Items
 
-    /// The tag for Ice's control item for the "Visible" section.
+    /// The tag for Lynx Bar's control item for the "Visible" section.
     static let visibleControlItem = MenuBarItemTag(controlItem: .visible)
 
-    /// The tag for Ice's control item for the "Hidden" section.
+    /// The tag for Lynx Bar's control item for the "Hidden" section.
     static let hiddenControlItem = MenuBarItemTag(controlItem: .hidden)
 
-    /// The tag for Ice's control item for the "Always-Hidden" section.
+    /// The tag for Lynx Bar's control item for the "Always-Hidden" section.
     static let alwaysHiddenControlItem = MenuBarItemTag(controlItem: .alwaysHidden)
 
     // MARK: Other Special Items
@@ -222,7 +222,7 @@ extension MenuBarItemTag {
 
 // MARK: MenuBarItemTag.Namespace Constants
 extension MenuBarItemTag.Namespace {
-    /// The namespace for the "Ice" process.
+    /// The namespace for the Lynx Bar process.
     static let ice = string(Constants.bundleIdentifier)
 
     /// The namespace for the "Control Center" process.

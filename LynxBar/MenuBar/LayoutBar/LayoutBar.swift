@@ -1,6 +1,6 @@
 //
 //  LayoutBar.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

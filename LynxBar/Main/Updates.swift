@@ -1,6 +1,6 @@
 //
 //  Updates.swift
-//  Ice
+//  LynxBar
 //
 
 import Sparkle

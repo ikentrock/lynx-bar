@@ -1,6 +1,6 @@
 //
 //  Modifiers.swift
-//  Ice
+//  LynxBar
 //
 
 import Carbon.HIToolbox

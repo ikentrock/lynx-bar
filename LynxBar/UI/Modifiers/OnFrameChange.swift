@@ -1,6 +1,6 @@
 //
 //  OnFrameChange.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

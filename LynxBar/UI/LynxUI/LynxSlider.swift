@@ -1,6 +1,6 @@
 //
 //  LynxSlider.swift
-//  Ice
+//  LynxBar
 //
 
 import CompactSlider

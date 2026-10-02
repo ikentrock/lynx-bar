@@ -1,6 +1,6 @@
 //
 //  SystemAppearance.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

@@ -1,6 +1,6 @@
 //
 //  MenuBarItemContainer.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

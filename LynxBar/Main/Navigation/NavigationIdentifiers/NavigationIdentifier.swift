@@ -1,6 +1,6 @@
 //
 //  NavigationIdentifier.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

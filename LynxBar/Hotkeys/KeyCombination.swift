@@ -1,6 +1,6 @@
 //
 //  KeyCombination.swift
-//  Ice
+//  LynxBar
 //
 
 import Carbon.HIToolbox

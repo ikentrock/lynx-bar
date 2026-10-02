@@ -1,6 +1,6 @@
 //
 //  CalloutBox.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI
@@ -136,6 +136,6 @@ struct CalloutBox<Content: View, Icon: View, ForegroundStyle: ShapeStyle>: View 
 }
 
 extension Font {
-    /// The default font for Ice callout boxes.
+    /// The default font for Lynx Bar callout boxes.
     static let calloutBox = callout.bold()
 }

@@ -1,6 +1,6 @@
 //
 //  AdvancedSettingsPane.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

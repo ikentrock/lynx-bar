@@ -1,6 +1,6 @@
 //
 //  MenuBarSearchModel.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

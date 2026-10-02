@@ -1,6 +1,6 @@
 //
 //  LocalizedErrorWrapper.swift
-//  Ice
+//  LynxBar
 //
 
 import Foundation

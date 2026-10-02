@@ -1,6 +1,6 @@
 //
 //  ScreenCapture.swift
-//  Ice
+//  LynxBar
 //
 
 import CoreGraphics

@@ -1,6 +1,6 @@
 //
 //  IceSettingsImporter.swift
-//  Ice
+//  LynxBar
 //
 
 import Foundation

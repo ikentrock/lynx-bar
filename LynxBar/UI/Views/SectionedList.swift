@@ -1,6 +1,6 @@
 //
 //  SectionedList.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

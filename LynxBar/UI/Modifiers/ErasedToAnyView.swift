@@ -1,6 +1,6 @@
 //
 //  ErasedToAnyView.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

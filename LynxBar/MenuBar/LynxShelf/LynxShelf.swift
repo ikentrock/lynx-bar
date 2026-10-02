@@ -1,6 +1,6 @@
 //
 //  LynxShelf.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine
@@ -13,7 +13,7 @@ final class LynxShelfPanel: NSPanel {
     /// The shared app state.
     private weak var appState: AppState?
 
-    /// Manager for the Ice Bar's color.
+    /// Manager for the Lynx Shelf's color.
     private let colorManager = LynxShelfColorManager()
 
     /// The currently displayed section.
@@ -22,7 +22,7 @@ final class LynxShelfPanel: NSPanel {
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
 
-    /// Creates a new Ice Bar panel.
+    /// Creates a new Lynx Shelf panel.
     init() {
         super.init(
             contentRect: .zero,

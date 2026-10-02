@@ -1,6 +1,6 @@
 //
 //  MenuBarItemImageCache.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

@@ -1,6 +1,6 @@
 //
 //  LocalEventMonitorModifier.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

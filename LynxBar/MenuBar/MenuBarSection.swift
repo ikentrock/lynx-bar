@@ -1,6 +1,6 @@
 //
 //  MenuBarSection.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI
@@ -54,7 +54,7 @@ final class MenuBarSection {
     /// is outside of the menu bar.
     private var rehideMonitor: EventMonitor?
 
-    /// A Boolean value that indicates whether the Ice Bar should be used.
+    /// A Boolean value that indicates whether the Lynx Shelf should be used.
     private var useLynxShelf: Bool {
         appState?.settings.general.useLynxShelf ?? false
     }
@@ -64,7 +64,7 @@ final class MenuBarSection {
         appState?.menuBarManager
     }
 
-    /// The best screen to show the Ice Bar on.
+    /// The best screen to show the Lynx Shelf on.
     private weak var screenForLynxShelf: NSScreen? {
         guard let appState else {
             return nil
@@ -163,7 +163,7 @@ final class MenuBarSection {
 
         if useLynxShelf {
             // Make sure hidden and always-hidden control items are collapsed.
-            // Still update the visible control item (Ice icon) state to show
+            // Still update the visible control item (Lynx icon) state to show
             // its alternate icon.
             for section in menuBarManager.sections {
                 switch section.name {
@@ -189,7 +189,7 @@ final class MenuBarSection {
             return // We're done.
         }
 
-        // If we made it here, we're not using the Ice Bar.
+        // If we made it here, we're not using the Lynx Shelf.
         // Make sure it's closed.
         menuBarManager.shelfPanel.close()
 
@@ -213,7 +213,7 @@ final class MenuBarSection {
             return
         }
 
-        menuBarManager.shelfPanel.close() // Make sure Ice Bar is always closed.
+        menuBarManager.shelfPanel.close() // Make sure Lynx Shelf is always closed.
         menuBarManager.showOnHoverAllowed = true
 
         switch name {
