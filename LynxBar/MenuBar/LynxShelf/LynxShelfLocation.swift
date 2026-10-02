@@ -14,7 +14,7 @@ enum LynxShelfLocation: Int, CaseIterable, Identifiable {
     case mousePointer = 1
 
     /// The Ice Bar will appear centered below the Ice icon.
-    case iceIcon = 2
+    case lynxIcon = 2
 
     var id: Int { rawValue }
 
@@ -23,7 +23,7 @@ enum LynxShelfLocation: Int, CaseIterable, Identifiable {
         switch self {
         case .dynamic: "Dynamic"
         case .mousePointer: "Mouse pointer"
-        case .iceIcon: "Lynx icon"
+        case .lynxIcon: "Lynx icon"
         }
     }
 }

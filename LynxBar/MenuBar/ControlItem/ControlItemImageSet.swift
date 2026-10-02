@@ -81,10 +81,10 @@ extension ControlItemImageSet {
     )
 
     /// The default image set for the Lynx icon.
-    static let defaultIceIcon = lynx
+    static let defaultLynxIcon = lynx
 
     /// The image sets that the user can choose to display in the Lynx icon.
-    static let userSelectableIceIcons = [
+    static let userSelectableLynxIcons = [
         ControlItemImageSet(
             name: .arrow,
             hidden: .symbol("arrowshape.left.fill"),

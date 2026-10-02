@@ -138,11 +138,11 @@ enum Defaults {
 extension Defaults {
     enum Key: String {
         // MARK: General Settings
-        case showIceIcon = "ShowIceIcon"
-        case iceIcon = "IceIcon"
-        case customIceIconIsTemplate = "CustomIceIconIsTemplate"
-        case useIceBar = "UseIceBar"
-        case iceBarLocation = "IceBarLocation"
+        case showLynxIcon = "ShowIceIcon"
+        case lynxIcon = "IceIcon"
+        case customLynxIconIsTemplate = "CustomIceIconIsTemplate"
+        case useLynxShelf = "UseIceBar"
+        case lynxShelfLocation = "IceBarLocation"
         case showOnClick = "ShowOnClick"
         case showOnHover = "ShowOnHover"
         case showOnScroll = "ShowOnScroll"

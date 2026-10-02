@@ -41,7 +41,7 @@ final class MenuBarManager: ObservableObject {
     private var isHidingApplicationMenus = false
 
     /// The panel that contains the Ice Bar interface.
-    let iceBarPanel = LynxShelfPanel()
+    let shelfPanel = LynxShelfPanel()
 
     /// The panel that contains the menu bar search interface.
     let searchPanel = MenuBarSearchPanel()
@@ -67,7 +67,7 @@ final class MenuBarManager: ObservableObject {
     func performSetup(with appState: AppState) {
         self.appState = appState
         configureCancellables()
-        iceBarPanel.performSetup(with: appState)
+        shelfPanel.performSetup(with: appState)
         searchPanel.performSetup(with: appState)
         appearanceEditorPanel.performSetup(with: appState)
         for section in sections {
@@ -162,7 +162,7 @@ final class MenuBarManager: ObservableObject {
                 //   * The settings window is visible.
                 guard
                     appState.settings.advanced.hideApplicationMenus,
-                    !appState.settings.general.useIceBar,
+                    !appState.settings.general.useLynxShelf,
                     !isMenuBarHiddenBySystem,
                     !appState.activeSpace.isFullscreen,
                     !appState.navigationState.isSettingsPresented

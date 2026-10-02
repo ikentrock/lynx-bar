@@ -14,25 +14,25 @@ import SwiftUI
 final class GeneralSettings: ObservableObject {
     /// A Boolean value that indicates whether the Ice icon
     /// should be shown.
-    @Published var showIceIcon = true
+    @Published var showLynxIcon = true
 
     /// An icon to show in the menu bar, with a different image
     /// for when items are visible or hidden.
-    @Published var iceIcon: ControlItemImageSet = .defaultIceIcon
+    @Published var lynxIcon: ControlItemImageSet = .defaultLynxIcon
 
     /// The last user-selected custom Ice icon.
-    @Published var lastCustomIceIcon: ControlItemImageSet?
+    @Published var lastCustomLynxIcon: ControlItemImageSet?
 
     /// A Boolean value that indicates whether custom Ice icons
     /// should be rendered as template images.
-    @Published var customIceIconIsTemplate = false
+    @Published var customLynxIconIsTemplate = false
 
     /// A Boolean value that indicates whether to show hidden items
     /// in a separate bar below the menu bar.
-    @Published var useIceBar = false
+    @Published var useLynxShelf = false
 
     /// The location where the Ice Bar appears.
-    @Published var iceBarLocation: LynxShelfLocation = .dynamic
+    @Published var lynxShelfLocation: LynxShelfLocation = .dynamic
 
     /// A Boolean value that indicates whether the hidden section
     /// should be shown when the mouse pointer clicks in an empty
@@ -84,9 +84,9 @@ final class GeneralSettings: ObservableObject {
 
     /// Loads the model's initial state.
     private func loadInitialState() {
-        Defaults.ifPresent(key: .showIceIcon, assign: &showIceIcon)
-        Defaults.ifPresent(key: .customIceIconIsTemplate, assign: &customIceIconIsTemplate)
-        Defaults.ifPresent(key: .useIceBar, assign: &useIceBar)
+        Defaults.ifPresent(key: .showLynxIcon, assign: &showLynxIcon)
+        Defaults.ifPresent(key: .customLynxIconIsTemplate, assign: &customLynxIconIsTemplate)
+        Defaults.ifPresent(key: .useLynxShelf, assign: &useLynxShelf)
         Defaults.ifPresent(key: .showOnClick, assign: &showOnClick)
         Defaults.ifPresent(key: .showOnHover, assign: &showOnHover)
         Defaults.ifPresent(key: .showOnScroll, assign: &showOnScroll)
@@ -94,9 +94,9 @@ final class GeneralSettings: ObservableObject {
         Defaults.ifPresent(key: .autoRehide, assign: &autoRehide)
         Defaults.ifPresent(key: .rehideInterval, assign: &rehideInterval)
 
-        Defaults.ifPresent(key: .iceBarLocation) { rawValue in
+        Defaults.ifPresent(key: .lynxShelfLocation) { rawValue in
             if let location = LynxShelfLocation(rawValue: rawValue) {
-                iceBarLocation = location
+                lynxShelfLocation = location
             }
         }
         Defaults.ifPresent(key: .rehideStrategy) { rawValue in
@@ -105,14 +105,14 @@ final class GeneralSettings: ObservableObject {
             }
         }
 
-        if let data = Defaults.data(forKey: .iceIcon) {
+        if let data = Defaults.data(forKey: .lynxIcon) {
             do {
-                iceIcon = try decoder.decode(ControlItemImageSet.self, from: data)
+                lynxIcon = try decoder.decode(ControlItemImageSet.self, from: data)
             } catch {
                 Logger.serialization.error("Error decoding Ice icon: \(error, privacy: .public)")
             }
-            if case .custom = iceIcon.name {
-                lastCustomIceIcon = iceIcon
+            if case .custom = lynxIcon.name {
+                lastCustomLynxIcon = lynxIcon
             }
         }
     }
@@ -121,49 +121,49 @@ final class GeneralSettings: ObservableObject {
     private func configureCancellables() {
         var c = Set<AnyCancellable>()
 
-        $showIceIcon
+        $showLynxIcon
             .receive(on: DispatchQueue.main)
-            .sink { showIceIcon in
-                Defaults.set(showIceIcon, forKey: .showIceIcon)
+            .sink { showLynxIcon in
+                Defaults.set(showLynxIcon, forKey: .showLynxIcon)
             }
             .store(in: &c)
 
-        $iceIcon
+        $lynxIcon
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] iceIcon in
+            .sink { [weak self] lynxIcon in
                 guard let self else {
                     return
                 }
-                if case .custom = iceIcon.name {
-                    lastCustomIceIcon = iceIcon
+                if case .custom = lynxIcon.name {
+                    lastCustomLynxIcon = lynxIcon
                 }
                 do {
-                    let data = try encoder.encode(iceIcon)
-                    Defaults.set(data, forKey: .iceIcon)
+                    let data = try encoder.encode(lynxIcon)
+                    Defaults.set(data, forKey: .lynxIcon)
                 } catch {
                     Logger.serialization.error("Error encoding Ice icon: \(error, privacy: .public)")
                 }
             }
             .store(in: &c)
 
-        $customIceIconIsTemplate
+        $customLynxIconIsTemplate
             .receive(on: DispatchQueue.main)
             .sink { isTemplate in
-                Defaults.set(isTemplate, forKey: .customIceIconIsTemplate)
+                Defaults.set(isTemplate, forKey: .customLynxIconIsTemplate)
             }
             .store(in: &c)
 
-        $useIceBar
+        $useLynxShelf
             .receive(on: DispatchQueue.main)
-            .sink { useIceBar in
-                Defaults.set(useIceBar, forKey: .useIceBar)
+            .sink { useLynxShelf in
+                Defaults.set(useLynxShelf, forKey: .useLynxShelf)
             }
             .store(in: &c)
 
-        $iceBarLocation
+        $lynxShelfLocation
             .receive(on: DispatchQueue.main)
             .sink { location in
-                Defaults.set(location.rawValue, forKey: .iceBarLocation)
+                Defaults.set(location.rawValue, forKey: .lynxShelfLocation)
             }
             .store(in: &c)
 

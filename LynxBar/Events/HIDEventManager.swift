@@ -219,8 +219,8 @@ extension HIDEventManager {
         }
 
         // Make sure clicking the Ice icon doesn't trigger rehide.
-        if let iceIcon = appState.menuBarManager.controlItem(withName: .visible) {
-            guard event.window !== iceIcon.window else {
+        if let lynxIcon = appState.menuBarManager.controlItem(withName: .visible) {
+            guard event.window !== lynxIcon.window else {
                 return
             }
         }
@@ -229,7 +229,7 @@ extension HIDEventManager {
         // least one section is visible, and the mouse is not inside
         // the menu bar.
         guard
-            event.window !== appState.menuBarManager.iceBarPanel,
+            event.window !== appState.menuBarManager.shelfPanel,
             appState.menuBarManager.hasVisibleSection,
             !isMouseInsideMenuBar(appState: appState, screen: screen)
         else {
@@ -359,7 +359,7 @@ extension HIDEventManager {
         } else {
             guard
                 !isMouseInsideMenuBar(appState: appState, screen: screen),
-                !isMouseInsideIceBar(appState: appState)
+                !isMouseInsideLynxShelf(appState: appState)
             else {
                 return
             }
@@ -368,7 +368,7 @@ extension HIDEventManager {
                 // Make sure the mouse is still outside.
                 guard
                     !isMouseInsideMenuBar(appState: appState, screen: screen),
-                    !isMouseInsideIceBar(appState: appState)
+                    !isMouseInsideLynxShelf(appState: appState)
                 else {
                     return
                 }
@@ -382,7 +382,7 @@ extension HIDEventManager {
     private func handlePreventShowOnHover(with event: NSEvent, appState: AppState, screen: NSScreen) {
         guard
             appState.settings.general.showOnHover,
-            !appState.settings.general.useIceBar
+            !appState.settings.general.useLynxShelf
         else {
             return
         }
@@ -397,7 +397,7 @@ extension HIDEventManager {
                 if appState.menuBarManager.hasVisibleSection {
                     break
                 }
-                if isMouseInsideIceIcon(appState: appState) {
+                if isMouseInsideLynxIcon(appState: appState) {
                     break
                 }
                 return
@@ -459,9 +459,9 @@ extension HIDEventManager {
         // Ice icon must be vertically visible. Otherwise, we can infer
         // that the menu bar is hidden and the mouse is not inside.
         guard
-            let iceIcon = appState.menuBarManager.controlItem(withName: .visible),
-            let iceIconFrame = iceIcon.frame,
-            iceIconFrame.maxY <= screen.frame.maxY,
+            let lynxIcon = appState.menuBarManager.controlItem(withName: .visible),
+            let lynxIconFrame = lynxIcon.frame,
+            lynxIconFrame.maxY <= screen.frame.maxY,
             let mouseLocation = MouseHelpers.locationAppKit
         else {
             return false
@@ -529,11 +529,11 @@ extension HIDEventManager {
 
     /// A Boolean value that indicates whether the mouse pointer is within
     /// the bounds of the Ice Bar panel.
-    func isMouseInsideIceBar(appState: AppState) -> Bool {
+    func isMouseInsideLynxShelf(appState: AppState) -> Bool {
         guard let mouseLocation = MouseHelpers.locationAppKit else {
             return false
         }
-        let panel = appState.menuBarManager.iceBarPanel
+        let panel = appState.menuBarManager.shelfPanel
         // Pad the frame to be more forgiving if the user accidentally
         // moves their mouse outside of the Ice Bar.
         let paddedFrame = panel.frame.insetBy(dx: -15, dy: -15)
@@ -542,15 +542,15 @@ extension HIDEventManager {
 
     /// A Boolean value that indicates whether the mouse pointer is within
     /// the bounds of the Ice icon.
-    func isMouseInsideIceIcon(appState: AppState) -> Bool {
+    func isMouseInsideLynxIcon(appState: AppState) -> Bool {
         guard
             let visibleSection = appState.menuBarManager.section(withName: .visible),
-            let iceIconFrame = visibleSection.controlItem.frame,
+            let lynxIconFrame = visibleSection.controlItem.frame,
             let mouseLocation = MouseHelpers.locationAppKit
         else {
             return false
         }
-        return iceIconFrame.contains(mouseLocation)
+        return lynxIconFrame.contains(mouseLocation)
     }
 }
 
