@@ -1,0 +1,6 @@
+// Local.xcconfig
+// Copy this file to Config/Local.xcconfig (gitignored) and set the name of a
+// code-signing certificate from your login keychain. A self-signed certificate
+// works: Keychain Access → Certificate Assistant → Create a Certificate…,
+// Identity Type "Self Signed Root", Certificate Type "Code Signing".
+CODE_SIGN_IDENTITY = Your Certificate Name
