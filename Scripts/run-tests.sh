@@ -27,4 +27,7 @@ if [[ -n ${LYNX_TEST_CERT:-} ]]; then
     EXPECT_CERT_SHA1=$LYNX_TEST_CERT "$OUT/PeerCodeRequirement" || failed=1
 fi
 
+build IceSettingsImporter ../Ice/Utilities/IceSettingsImporter.swift ../Shared/Utilities/Logging.swift
+run IceSettingsImporter
+
 exit $failed
