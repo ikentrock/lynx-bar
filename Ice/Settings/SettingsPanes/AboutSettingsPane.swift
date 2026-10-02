@@ -16,17 +16,15 @@ struct AboutSettingsPane: View {
     }
 
     private var contributeURL: URL {
-        // swiftlint:disable:next force_unwrapping
-        URL(string: "https://github.com/jordanbaird/Ice")!
+        URL(string: "https://github.com/ikentrock/lynx-bar")!
     }
 
     private var issuesURL: URL {
         contributeURL.appendingPathComponent("issues")
     }
 
-    private var donateURL: URL {
-        // swiftlint:disable:next force_unwrapping
-        URL(string: "https://icemenubar.app/Donate")!
+    private var upstreamURL: URL {
+        URL(string: "https://github.com/jordanbaird/Ice")!
     }
 
     private var lastUpdateCheckString: String {
@@ -80,13 +78,13 @@ struct AboutSettingsPane: View {
                 if let nsImage = NSImage(named: NSImage.applicationIconName) {
                     Image(nsImage: nsImage)
                         .resizable()
-                        .aspectRatio(contentMode: .fit)
+                        .scaledToFit()
                         .frame(width: 230)
                 }
 
                 VStack(alignment: .leading) {
-                    Text("Ice")
-                        .font(.system(size: 80))
+                    Text("Lynx Bar")
+                        .font(.system(size: 64))
                         .foregroundStyle(.primary)
 
                     Text("Version \(Constants.versionString)")
@@ -105,10 +103,16 @@ struct AboutSettingsPane: View {
     @ViewBuilder
     private var updatesSection: some View {
         IceSection(options: .hasDividers) {
-            automaticallyCheckForUpdates
-            automaticallyDownloadUpdates
-            if updatesManager.canCheckForUpdates {
-                checkForUpdates
+            if UpdatesManager.isAvailable {
+                automaticallyCheckForUpdates
+                automaticallyDownloadUpdates
+                if updatesManager.canCheckForUpdates {
+                    checkForUpdates
+                }
+            } else {
+                Text("Updates are not available in this build.")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: 600)
@@ -145,7 +149,7 @@ struct AboutSettingsPane: View {
     @ViewBuilder
     private func bottomBar(containerShape: some InsettableShape) -> some View {
         HStack {
-            Button("Quit Ice") {
+            Button("Quit Lynx Bar") {
                 NSApp.terminate(nil)
             }
             Spacer()
@@ -158,9 +162,10 @@ struct AboutSettingsPane: View {
             Button("Report a Bug") {
                 openURL(issuesURL)
             }
-            Button("Support Ice", systemImage: "heart.circle.fill") {
-                openURL(donateURL)
+            Button("Based on Ice") {
+                openURL(upstreamURL)
             }
+            .help("Lynx Bar is based on Ice by Jordan Baird")
         }
         .padding(8)
         .buttonStyle(BottomBarButtonStyle())

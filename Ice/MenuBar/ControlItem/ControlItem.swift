@@ -91,6 +91,10 @@ final class ControlItem {
                 button.target = controlItem
                 button.action = #selector(controlItem.performAction)
                 button.sendAction(on: [.leftMouseDown, .rightMouseUp])
+
+                if controlItem.identifier == .visible {
+                    button.setAccessibilityLabel("Lynx Bar")
+                }
             } else {
                 self.constraint = nil
             }
@@ -500,10 +504,10 @@ final class ControlItem {
             appState.settings.hotkeys.hotkey(withAction: action)
         }
 
-        let menu = NSMenu(title: "Ice")
+        let menu = NSMenu(title: "Lynx Bar")
 
         let settingsItem = NSMenuItem(
-            title: "Ice Settings…",
+            title: "Lynx Bar Settings…",
             action: #selector(AppDelegate.openSettingsWindow),
             keyEquivalent: ","
         )
@@ -569,7 +573,7 @@ final class ControlItem {
         }
 
         let quitItem = NSMenuItem(
-            title: "Quit Ice",
+            title: "Quit Lynx Bar",
             action: #selector(NSApp.terminate),
             keyEquivalent: "q"
         )
