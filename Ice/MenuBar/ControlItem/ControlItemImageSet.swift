@@ -13,9 +13,26 @@ struct ControlItemImageSet: Codable, Hashable, Identifiable {
         case door = "Door"
         case dot = "Dot"
         case ellipsis = "Ellipsis"
-        case iceCube = "Ice Cube"
+        case lynx = "Lynx"
         case sunglasses = "Sunglasses"
         case custom = "Custom"
+
+        /// The name Ice stored for its "Ice Cube" set, replaced by ``lynx``.
+        private static let legacyIceCube = "Ice Cube"
+
+        init(from decoder: any Decoder) throws {
+            let rawValue = try decoder.singleValueContainer().decode(String.self)
+            if rawValue == Self.legacyIceCube {
+                self = .lynx
+            } else if let name = Self(rawValue: rawValue) {
+                self = name
+            } else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unknown image set name \(rawValue)"
+                ))
+            }
+        }
     }
 
     let name: Name
@@ -33,17 +50,40 @@ struct ControlItemImageSet: Codable, Hashable, Identifiable {
     init(name: Name, image: ControlItemImage) {
         self.init(name: name, hidden: image, visible: image)
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, hidden, visible
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let name = try container.decode(Name.self, forKey: .name)
+        if name == .lynx {
+            // Stored "Ice Cube" sets point at deleted IceCube assets; always use
+            // the current Lynx images.
+            self = .lynx
+            return
+        }
+        self.init(
+            name: name,
+            hidden: try container.decode(ControlItemImage.self, forKey: .hidden),
+            visible: try container.decode(ControlItemImage.self, forKey: .visible)
+        )
+    }
 }
 
 extension ControlItemImageSet {
-    /// The default image set for the Ice icon.
-    static let defaultIceIcon = ControlItemImageSet(
-        name: .dot,
-        hidden: .catalog("DotFill"),
-        visible: .catalog("DotStroke")
+    /// The Lynx image set.
+    static let lynx = ControlItemImageSet(
+        name: .lynx,
+        hidden: .catalog("LynxStroke"),
+        visible: .catalog("LynxFill")
     )
 
-    /// The image sets that the user can choose to display in the Ice icon.
+    /// The default image set for the Lynx icon.
+    static let defaultIceIcon = lynx
+
+    /// The image sets that the user can choose to display in the Lynx icon.
     static let userSelectableIceIcons = [
         ControlItemImageSet(
             name: .arrow,
@@ -70,11 +110,7 @@ extension ControlItemImageSet {
             hidden: .catalog("EllipsisFill"),
             visible: .catalog("EllipsisStroke")
         ),
-        ControlItemImageSet(
-            name: .iceCube,
-            hidden: .catalog("IceCubeStroke"),
-            visible: .catalog("IceCubeFill")
-        ),
+        lynx,
         ControlItemImageSet(
             name: .sunglasses,
             hidden: .symbol("sunglasses.fill"),
