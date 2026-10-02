@@ -14,6 +14,22 @@ final class MenuBarItemManager: ObservableObject {
     /// The current cache of menu bar items.
     @Published private(set) var itemCache = ItemCache(displayID: nil)
 
+    /// Why the `MenuBarItemService` helper can't be used, or `nil` if it can.
+    ///
+    /// While this is set, items are neither cached nor moved, since items
+    /// can't be told apart without the helper on macOS 26.
+    @Published private(set) var helperFailureReason: String?
+
+    /// The message shown in place of menu bar items while ``helperFailureReason`` is set.
+    static let helperUnavailableMessage = "Lynx Bar's helper couldn't start. Build Lynx Bar with a signing certificate (see README)."
+
+    /// Records that the `MenuBarItemService` helper can't be used.
+    func setHelperFailure(_ reason: String) {
+        logger.error("Menu bar item helper unavailable: \(reason, privacy: .public)")
+        helperFailureReason = reason
+        itemCache = ItemCache(displayID: nil)
+    }
+
     /// Logger for the menu bar item manager.
     private nonisolated let logger = Logger.menuBarItemManager
 
@@ -340,6 +356,10 @@ extension MenuBarItemManager {
     /// the hidden and always-hidden sections are correctly ordered,
     /// arranging them into valid positions if needed.
     func cacheItemsRegardless(_ currentItemWindowIDs: [CGWindowID]? = nil) async {
+        guard helperFailureReason == nil else {
+            logger.debug("Skipping menu bar item cache: helper unavailable")
+            return
+        }
         await cacheActor.runCacheTask { [weak self] in
             guard let self else {
                 return

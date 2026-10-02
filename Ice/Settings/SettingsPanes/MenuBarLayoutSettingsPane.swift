@@ -51,7 +51,12 @@ struct MenuBarLayoutSettingsPane: View {
         .blur(radius: hasItems ? 0 : 5)
         .allowsHitTesting(hasItems)
         .overlay {
-            if !hasItems {
+            if itemManager.helperFailureReason != nil {
+                Text(MenuBarItemManager.helperUnavailableMessage)
+                    .font(.title2)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            } else if !hasItems {
                 loadingMenuBarItems
             }
         }

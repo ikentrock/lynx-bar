@@ -250,7 +250,13 @@ private struct MenuBarSearchContentView: View {
 
     @ViewBuilder
     private var mainContent: some View {
-        if hasItems {
+        if itemManager.helperFailureReason != nil {
+            Text(MenuBarItemManager.helperUnavailableMessage)
+                .font(.title3)
+                .multilineTextAlignment(.center)
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if hasItems {
             SectionedList(selection: $model.selection, items: $model.displayedItems)
                 .contentPadding(8)
                 .scrollContentBackground(.hidden)

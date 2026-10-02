@@ -15,4 +15,8 @@ DEVELOPMENT_TEAM =
 CODE_SIGN_STYLE = Manual
 CODE_SIGN_IDENTITY = -
 
+// Team-less signatures fail the hardened runtime's same-team library check;
+// see the comment in LynxBar.entitlements.
+CODE_SIGN_ENTITLEMENTS = Config/LynxBar.entitlements
+
 #include? "Local.xcconfig"
