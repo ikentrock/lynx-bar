@@ -15,6 +15,11 @@ final class UpdatesManager: NSObject, ObservableObject {
     /// The date of the last update check.
     @Published var lastUpdateCheckDate: Date?
 
+    /// A Boolean value that indicates whether this build has an update feed.
+    ///
+    /// Without `SUFeedURL` in Info.plist, Sparkle is never started.
+    static let isAvailable = Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") is String
+
     /// The shared app state.
     private(set) weak var appState: AppState?
 
@@ -33,9 +38,12 @@ final class UpdatesManager: NSObject, ObservableObject {
     /// A Boolean value that indicates whether to automatically check for updates.
     var automaticallyChecksForUpdates: Bool {
         get {
-            updater.automaticallyChecksForUpdates
+            Self.isAvailable && updater.automaticallyChecksForUpdates
         }
         set {
+            guard Self.isAvailable else {
+                return
+            }
             objectWillChange.send()
             updater.automaticallyChecksForUpdates = newValue
         }
@@ -44,9 +52,12 @@ final class UpdatesManager: NSObject, ObservableObject {
     /// A Boolean value that indicates whether to automatically download updates.
     var automaticallyDownloadsUpdates: Bool {
         get {
-            updater.automaticallyDownloadsUpdates
+            Self.isAvailable && updater.automaticallyDownloadsUpdates
         }
         set {
+            guard Self.isAvailable else {
+                return
+            }
             objectWillChange.send()
             updater.automaticallyDownloadsUpdates = newValue
         }
@@ -55,6 +66,9 @@ final class UpdatesManager: NSObject, ObservableObject {
     /// Performs the initial setup of the manager.
     func performSetup(with appState: AppState) {
         self.appState = appState
+        guard Self.isAvailable else {
+            return
+        }
         _ = updaterController
         configureCancellables()
     }
@@ -69,6 +83,9 @@ final class UpdatesManager: NSObject, ObservableObject {
 
     /// Checks for app updates.
     @objc func checkForUpdates() {
+        guard Self.isAvailable else {
+            return
+        }
         #if DEBUG
         // Checking for updates hangs in debug mode.
         let alert = NSAlert()
