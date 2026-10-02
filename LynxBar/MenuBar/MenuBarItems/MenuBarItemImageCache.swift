@@ -275,10 +275,10 @@ final class MenuBarItemImageCache: ObservableObject {
             return
         }
 
-        let isIceBarPresented = await appState.navigationState.isIceBarPresented
+        let isLynxShelfPresented = await appState.navigationState.isLynxShelfPresented
         let isSearchPresented = await appState.navigationState.isSearchPresented
 
-        if !isIceBarPresented && !isSearchPresented {
+        if !isLynxShelfPresented && !isSearchPresented {
             guard
                 await appState.navigationState.isAppFrontmost,
                 await appState.navigationState.isSettingsPresented,
@@ -302,7 +302,7 @@ final class MenuBarItemImageCache: ObservableObject {
             return
         }
 
-        let isIceBarPresented = await appState.navigationState.isIceBarPresented
+        let isLynxShelfPresented = await appState.navigationState.isLynxShelfPresented
         let isSearchPresented = await appState.navigationState.isSearchPresented
         let isSettingsPresented = await appState.navigationState.isSettingsPresented
 
@@ -311,8 +311,8 @@ final class MenuBarItemImageCache: ObservableObject {
         if isSettingsPresented || isSearchPresented {
             sectionsNeedingDisplay = MenuBarSection.Name.allCases
         } else if
-            isIceBarPresented,
-            let section = await appState.menuBarManager.iceBarPanel.currentSection
+            isLynxShelfPresented,
+            let section = await appState.menuBarManager.shelfPanel.currentSection
         {
             sectionsNeedingDisplay.append(section)
         }

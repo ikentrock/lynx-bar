@@ -26,7 +26,7 @@ struct LynxSection<Header: View, Content: View, Footer: View>: View {
     private var hasDividers: Bool { options.contains(.hasDividers) }
 
     init(
-        spacing: CGFloat = .iceSectionDefaultSpacing,
+        spacing: CGFloat = .lynxSectionDefaultSpacing,
         options: LynxSectionOptions = .default,
         @ViewBuilder header: () -> Header,
         @ViewBuilder content: () -> Content,
@@ -40,7 +40,7 @@ struct LynxSection<Header: View, Content: View, Footer: View>: View {
     }
 
     init(
-        spacing: CGFloat = .iceSectionDefaultSpacing,
+        spacing: CGFloat = .lynxSectionDefaultSpacing,
         options: LynxSectionOptions = .default,
         @ViewBuilder content: () -> Content,
         @ViewBuilder footer: () -> Footer
@@ -55,7 +55,7 @@ struct LynxSection<Header: View, Content: View, Footer: View>: View {
     }
 
     init(
-        spacing: CGFloat = .iceSectionDefaultSpacing,
+        spacing: CGFloat = .lynxSectionDefaultSpacing,
         options: LynxSectionOptions = .default,
         @ViewBuilder header: () -> Header,
         @ViewBuilder content: () -> Content
@@ -70,7 +70,7 @@ struct LynxSection<Header: View, Content: View, Footer: View>: View {
     }
 
     init(
-        spacing: CGFloat = .iceSectionDefaultSpacing,
+        spacing: CGFloat = .lynxSectionDefaultSpacing,
         options: LynxSectionOptions = .default,
         @ViewBuilder content: () -> Content
     ) where Header == EmptyView, Footer == EmptyView {
@@ -85,7 +85,7 @@ struct LynxSection<Header: View, Content: View, Footer: View>: View {
 
     init(
         _ title: LocalizedStringKey,
-        spacing: CGFloat = .iceSectionDefaultSpacing,
+        spacing: CGFloat = .lynxSectionDefaultSpacing,
         options: LynxSectionOptions = .default,
         @ViewBuilder content: () -> Content
     ) where Header == Text, Footer == EmptyView {
@@ -174,5 +174,5 @@ private struct LynxSectionDivider: View {
 
 extension CGFloat {
     /// The default spacing for an ``LynxSection``.
-    static let iceSectionDefaultSpacing: CGFloat = if #available(macOS 26.0, *) { 11 } else { 10 }
+    static let lynxSectionDefaultSpacing: CGFloat = if #available(macOS 26.0, *) { 11 } else { 10 }
 }

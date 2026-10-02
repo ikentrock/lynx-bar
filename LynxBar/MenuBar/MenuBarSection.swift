@@ -55,8 +55,8 @@ final class MenuBarSection {
     private var rehideMonitor: EventMonitor?
 
     /// A Boolean value that indicates whether the Ice Bar should be used.
-    private var useIceBar: Bool {
-        appState?.settings.general.useIceBar ?? false
+    private var useLynxShelf: Bool {
+        appState?.settings.general.useLynxShelf ?? false
     }
 
     /// A weak reference to the menu bar manager.
@@ -65,7 +65,7 @@ final class MenuBarSection {
     }
 
     /// The best screen to show the Ice Bar on.
-    private weak var screenForIceBar: NSScreen? {
+    private weak var screenForLynxShelf: NSScreen? {
         guard let appState else {
             return nil
         }
@@ -78,25 +78,25 @@ final class MenuBarSection {
 
     /// A Boolean value that indicates whether the section is hidden.
     var isHidden: Bool {
-        if useIceBar {
+        if useLynxShelf {
             if controlItem.state == .showSection {
                 return false
             }
             switch name {
             case .visible, .hidden:
-                return menuBarManager?.iceBarPanel.currentSection != .hidden
+                return menuBarManager?.shelfPanel.currentSection != .hidden
             case .alwaysHidden:
-                return menuBarManager?.iceBarPanel.currentSection != .alwaysHidden
+                return menuBarManager?.shelfPanel.currentSection != .alwaysHidden
             }
         }
         switch name {
         case .visible, .hidden:
-            if menuBarManager?.iceBarPanel.currentSection == .hidden {
+            if menuBarManager?.shelfPanel.currentSection == .hidden {
                 return false
             }
             return controlItem.state == .hideSection
         case .alwaysHidden:
-            if menuBarManager?.iceBarPanel.currentSection == .alwaysHidden {
+            if menuBarManager?.shelfPanel.currentSection == .alwaysHidden {
                 return false
             }
             return controlItem.state == .hideSection
@@ -161,7 +161,7 @@ final class MenuBarSection {
             return
         }
 
-        if useIceBar {
+        if useLynxShelf {
             // Make sure hidden and always-hidden control items are collapsed.
             // Still update the visible control item (Ice icon) state to show
             // its alternate icon.
@@ -174,13 +174,13 @@ final class MenuBarSection {
                 }
             }
 
-            if let screen = screenForIceBar {
+            if let screen = screenForLynxShelf {
                 Task {
                     switch name {
                     case .visible, .hidden:
-                        await menuBarManager.iceBarPanel.show(section: .hidden, on: screen)
+                        await menuBarManager.shelfPanel.show(section: .hidden, on: screen)
                     case .alwaysHidden:
-                        await menuBarManager.iceBarPanel.show(section: .alwaysHidden, on: screen)
+                        await menuBarManager.shelfPanel.show(section: .alwaysHidden, on: screen)
                     }
                     startRehideChecks()
                 }
@@ -191,7 +191,7 @@ final class MenuBarSection {
 
         // If we made it here, we're not using the Ice Bar.
         // Make sure it's closed.
-        menuBarManager.iceBarPanel.close()
+        menuBarManager.shelfPanel.close()
 
         switch name {
         case .visible, .hidden:
@@ -213,11 +213,11 @@ final class MenuBarSection {
             return
         }
 
-        menuBarManager.iceBarPanel.close() // Make sure Ice Bar is always closed.
+        menuBarManager.shelfPanel.close() // Make sure Ice Bar is always closed.
         menuBarManager.showOnHoverAllowed = true
 
         switch name {
-        case _ where useIceBar, .visible, .hidden:
+        case _ where useLynxShelf, .visible, .hidden:
             for section in menuBarManager.sections {
                 section.controlItem.state = .hideSection
             }

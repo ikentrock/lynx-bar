@@ -271,7 +271,7 @@ final class ControlItem {
                 .store(in: &c)
 
             if identifier == .visible {
-                appState.settings.general.$showIceIcon
+                appState.settings.general.$showLynxIcon
                     .combineLatest(statusItem.publisher(for: \.isVisible))
                     .removeDuplicates()
                     .receive(on: DispatchQueue.main)
@@ -287,8 +287,8 @@ final class ControlItem {
                     }
                     .store(in: &c)
 
-                appState.settings.general.$iceIcon
-                    .combineLatest(appState.settings.general.$customIceIconIsTemplate)
+                appState.settings.general.$lynxIcon
+                    .combineLatest(appState.settings.general.$customLynxIconIsTemplate)
                     .removeDuplicates()
                     .receive(on: DispatchQueue.main)
                     .sink { [weak self] _ in
@@ -347,7 +347,7 @@ final class ControlItem {
             updateStatusItemVisibility(true)
             button.appearsDisabled = false
 
-            let icon = appState.settings.general.iceIcon
+            let icon = appState.settings.general.lynxIcon
 
             // We can usually just create the image directly from the icon.
             var image = switch state {

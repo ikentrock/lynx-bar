@@ -19,7 +19,7 @@ struct HotkeysSettingsPane: View {
                 hotkeyRecorder(forAction: .searchMenuBarItems)
             }
             LynxSection("Other") {
-                hotkeyRecorder(forAction: .enableIceBar)
+                hotkeyRecorder(forAction: .enableLynxShelf)
                 hotkeyRecorder(forAction: .toggleApplicationMenus)
             }
         }
@@ -36,7 +36,7 @@ struct HotkeysSettingsPane: View {
                     Text("Toggle the always-hidden section")
                 case .searchMenuBarItems:
                     Text("Search menu bar items")
-                case .enableIceBar:
+                case .enableLynxShelf:
                     Text("Enable the Lynx Shelf")
                 case .toggleApplicationMenus:
                     Text("Toggle application menus")

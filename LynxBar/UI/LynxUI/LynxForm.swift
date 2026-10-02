@@ -15,8 +15,8 @@ struct LynxForm<Content: View>: View {
 
     init(
         alignment: HorizontalAlignment = .center,
-        padding: EdgeInsets = .iceFormDefaultPadding,
-        spacing: CGFloat = .iceFormDefaultSpacing,
+        padding: EdgeInsets = .lynxFormDefaultPadding,
+        spacing: CGFloat = .lynxFormDefaultSpacing,
         @ViewBuilder content: () -> Content
     ) {
         self.alignment = alignment
@@ -28,7 +28,7 @@ struct LynxForm<Content: View>: View {
     init(
         alignment: HorizontalAlignment = .center,
         padding: CGFloat,
-        spacing: CGFloat = .iceFormDefaultSpacing,
+        spacing: CGFloat = .lynxFormDefaultSpacing,
         @ViewBuilder content: () -> Content
     ) {
         self.init(
@@ -92,7 +92,7 @@ private struct LynxFormToggleStyle: ToggleStyle {
 
 extension EdgeInsets {
     /// The default padding for an ``LynxForm``.
-    static let iceFormDefaultPadding: EdgeInsets = {
+    static let lynxFormDefaultPadding: EdgeInsets = {
         var insets = EdgeInsets(all: 20)
         if #available(macOS 26.0, *) {
             insets.top = 0
@@ -103,5 +103,5 @@ extension EdgeInsets {
 
 extension CGFloat {
     /// The default spacing for an ``LynxForm``.
-    static let iceFormDefaultSpacing: CGFloat = 10
+    static let lynxFormDefaultSpacing: CGFloat = 10
 }

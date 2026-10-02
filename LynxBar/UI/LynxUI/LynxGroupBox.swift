@@ -28,7 +28,7 @@ struct LynxGroupBox<Header: View, Content: View, Footer: View>: View {
     }
 
     init(
-        padding: EdgeInsets = .iceGroupBoxDefaultPadding,
+        padding: EdgeInsets = .lynxGroupBoxDefaultPadding,
         @ViewBuilder header: () -> Header,
         @ViewBuilder content: () -> Content,
         @ViewBuilder footer: () -> Footer
@@ -55,7 +55,7 @@ struct LynxGroupBox<Header: View, Content: View, Footer: View>: View {
     }
 
     init(
-        padding: EdgeInsets = .iceGroupBoxDefaultPadding,
+        padding: EdgeInsets = .lynxGroupBoxDefaultPadding,
         @ViewBuilder content: () -> Content,
         @ViewBuilder footer: () -> Footer
     ) where Header == EmptyView {
@@ -83,7 +83,7 @@ struct LynxGroupBox<Header: View, Content: View, Footer: View>: View {
     }
 
     init(
-        padding: EdgeInsets = .iceGroupBoxDefaultPadding,
+        padding: EdgeInsets = .lynxGroupBoxDefaultPadding,
         @ViewBuilder header: () -> Header,
         @ViewBuilder content: () -> Content
     ) where Footer == EmptyView {
@@ -111,7 +111,7 @@ struct LynxGroupBox<Header: View, Content: View, Footer: View>: View {
     }
 
     init(
-        padding: EdgeInsets = .iceGroupBoxDefaultPadding,
+        padding: EdgeInsets = .lynxGroupBoxDefaultPadding,
         @ViewBuilder content: () -> Content
     ) where Header == EmptyView, Footer == EmptyView {
         self.init(padding: padding) {
@@ -138,7 +138,7 @@ struct LynxGroupBox<Header: View, Content: View, Footer: View>: View {
 
     init(
         _ title: LocalizedStringKey,
-        padding: EdgeInsets = .iceGroupBoxDefaultPadding,
+        padding: EdgeInsets = .lynxGroupBoxDefaultPadding,
         @ViewBuilder content: () -> Content
     ) where Header == Text, Footer == EmptyView {
         self.init(padding: padding) {
@@ -192,5 +192,5 @@ struct LynxGroupBox<Header: View, Content: View, Footer: View>: View {
 
 extension EdgeInsets {
     /// The default padding for an ``LynxGroupBox``.
-    static let iceGroupBoxDefaultPadding = EdgeInsets(all: 12)
+    static let lynxGroupBoxDefaultPadding = EdgeInsets(all: 12)
 }

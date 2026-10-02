@@ -9,7 +9,7 @@ import SwiftUI
 struct GeneralSettingsPane: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject var settings: GeneralSettings
-    @State private var isImportingCustomIceIcon = false
+    @State private var isImportingCustomLynxIcon = false
     @State private var isPresentingError = false
     @State private var presentedError: LocalizedErrorWrapper?
     @State private var isApplyingItemSpacingOffset = false
@@ -39,10 +39,10 @@ struct GeneralSettingsPane: View {
                 appOptions
             }
             LynxSection {
-                iceIconOptions
+                lynxIconOptions
             }
             LynxSection {
-                iceBarOptions
+                lynxShelfOptions
             }
             LynxSection {
                 showOptions
@@ -66,40 +66,40 @@ struct GeneralSettingsPane: View {
     // MARK: Ice Icon Options
 
     @ViewBuilder
-    private var iceIconOptions: some View {
-        showIceIcon
-        if settings.showIceIcon {
-            iceIconPicker
+    private var lynxIconOptions: some View {
+        showLynxIcon
+        if settings.showLynxIcon {
+            lynxIconPicker
         }
     }
 
     @ViewBuilder
-    private var showIceIcon: some View {
-        Toggle("Show Lynx icon", isOn: $settings.showIceIcon)
+    private var showLynxIcon: some View {
+        Toggle("Show Lynx icon", isOn: $settings.showLynxIcon)
             .annotation("Click to show hidden menu bar items. Right-click to access Lynx Bar's settings.")
     }
 
     @ViewBuilder
-    private var iceIconPicker: some View {
+    private var lynxIconPicker: some View {
         let labelKey = LocalizedStringKey("Lynx icon")
 
         LynxMenu(labelKey) {
-            Picker(labelKey, selection: $settings.iceIcon) {
-                ForEach(ControlItemImageSet.userSelectableIceIcons) { imageSet in
+            Picker(labelKey, selection: $settings.lynxIcon) {
+                ForEach(ControlItemImageSet.userSelectableLynxIcons) { imageSet in
                     Button {
-                        settings.iceIcon = imageSet
+                        settings.lynxIcon = imageSet
                     } label: {
-                        iceIconMenuItem(for: imageSet)
+                        lynxIconMenuItem(for: imageSet)
                     }
                     .tag(imageSet)
                 }
-                if let lastCustomIceIcon = settings.lastCustomIceIcon {
+                if let lastCustomLynxIcon = settings.lastCustomLynxIcon {
                     Button {
-                        settings.iceIcon = lastCustomIceIcon
+                        settings.lynxIcon = lastCustomLynxIcon
                     } label: {
-                        iceIconMenuItem(for: lastCustomIceIcon)
+                        lynxIconMenuItem(for: lastCustomLynxIcon)
                     }
-                    .tag(lastCustomIceIcon)
+                    .tag(lastCustomLynxIcon)
                 }
             }
             .pickerStyle(.inline)
@@ -108,14 +108,14 @@ struct GeneralSettingsPane: View {
             Divider()
 
             Button("Choose image…") {
-                isImportingCustomIceIcon = true
+                isImportingCustomLynxIcon = true
             }
         } title: {
-            iceIconMenuItem(for: settings.iceIcon)
+            lynxIconMenuItem(for: settings.lynxIcon)
         }
         .annotation("Choose a custom icon to show in the menu bar.")
         .fileImporter(
-            isPresented: $isImportingCustomIceIcon,
+            isPresented: $isImportingCustomLynxIcon,
             allowedContentTypes: [.image]
         ) { result in
             do {
@@ -123,7 +123,7 @@ struct GeneralSettingsPane: View {
                 if url.startAccessingSecurityScopedResource() {
                     defer { url.stopAccessingSecurityScopedResource() }
                     let data = try Data(contentsOf: url)
-                    settings.iceIcon = ControlItemImageSet(name: .custom, image: .data(data))
+                    settings.lynxIcon = ControlItemImageSet(name: .custom, image: .data(data))
                 }
             } catch {
                 presentedError = LocalizedErrorWrapper(error)
@@ -137,8 +137,8 @@ struct GeneralSettingsPane: View {
             }
         }
 
-        if case .custom = settings.iceIcon.name {
-            Toggle("Custom icon uses dynamic appearance", isOn: $settings.customIceIconIsTemplate)
+        if case .custom = settings.lynxIcon.name {
+            Toggle("Custom icon uses dynamic appearance", isOn: $settings.customLynxIconIsTemplate)
                 .annotation {
                     Text(
                         """
@@ -153,7 +153,7 @@ struct GeneralSettingsPane: View {
     }
 
     @ViewBuilder
-    private func iceIconMenuItem(for imageSet: ControlItemImageSet) -> some View {
+    private func lynxIconMenuItem(for imageSet: ControlItemImageSet) -> some View {
         Label {
             Text(imageSet.name.rawValue)
         } icon: {
@@ -173,33 +173,33 @@ struct GeneralSettingsPane: View {
     // MARK: Ice Bar Options
 
     @ViewBuilder
-    private var iceBarOptions: some View {
-        useIceBar
-        if settings.useIceBar {
-            iceBarLocationPicker
+    private var lynxShelfOptions: some View {
+        useLynxShelf
+        if settings.useLynxShelf {
+            lynxShelfLocationPicker
         }
     }
 
     @ViewBuilder
-    private var useIceBar: some View {
-        Toggle("Use Lynx Shelf", isOn: $settings.useIceBar)
+    private var useLynxShelf: some View {
+        Toggle("Use Lynx Shelf", isOn: $settings.useLynxShelf)
             .annotation("Show hidden menu bar items in a separate bar below the menu bar.")
     }
 
     @ViewBuilder
-    private var iceBarLocationPicker: some View {
-        LynxPicker("Location", selection: $settings.iceBarLocation) {
+    private var lynxShelfLocationPicker: some View {
+        LynxPicker("Location", selection: $settings.lynxShelfLocation) {
             ForEach(LynxShelfLocation.allCases) { location in
                 Text(location.localized).tag(location)
             }
         }
         .annotation {
-            switch settings.iceBarLocation {
+            switch settings.lynxShelfLocation {
             case .dynamic:
                 Text("The Lynx Shelf's location changes based on context.")
             case .mousePointer:
                 Text("The Lynx Shelf is centered below the mouse pointer.")
-            case .iceIcon:
+            case .lynxIcon:
                 Text("The Lynx Shelf is centered below the Lynx icon.")
             }
         }

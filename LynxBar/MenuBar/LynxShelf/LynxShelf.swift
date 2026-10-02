@@ -108,7 +108,7 @@ final class LynxShelfPanel: NSPanel {
             return
         }
 
-        func getOrigin(for iceBarLocation: LynxShelfLocation) -> CGPoint {
+        func getOrigin(for lynxShelfLocation: LynxShelfLocation) -> CGPoint {
             let menuBarHeight = screen.getMenuBarHeight() ?? 0
             let originY = ((screen.frame.maxY - 1) - menuBarHeight) - frame.height
 
@@ -116,15 +116,15 @@ final class LynxShelfPanel: NSPanel {
                 CGPoint(x: screen.frame.maxX - frame.width, y: originY)
             }
 
-            switch iceBarLocation {
+            switch lynxShelfLocation {
             case .dynamic:
                 if appState.hidEventManager.isMouseInsideEmptyMenuBarSpace(appState: appState, screen: screen) {
                     return getOrigin(for: .mousePointer)
                 }
-                return getOrigin(for: .iceIcon)
+                return getOrigin(for: .lynxIcon)
             case .mousePointer:
                 guard let location = MouseHelpers.locationAppKit else {
-                    return getOrigin(for: .iceIcon)
+                    return getOrigin(for: .lynxIcon)
                 }
 
                 let lowerBound = screen.frame.minX
@@ -135,7 +135,7 @@ final class LynxShelfPanel: NSPanel {
                 }
 
                 return CGPoint(x: (location.x - frame.width / 2).clamped(to: lowerBound...upperBound), y: originY)
-            case .iceIcon:
+            case .lynxIcon:
                 let lowerBound = screen.frame.minX
                 let upperBound = screen.frame.maxX - frame.width
 
@@ -153,7 +153,7 @@ final class LynxShelfPanel: NSPanel {
             }
         }
 
-        setFrameOrigin(getOrigin(for: appState.settings.general.iceBarLocation))
+        setFrameOrigin(getOrigin(for: appState.settings.general.lynxShelfLocation))
     }
 
     /// Shows the panel on the given screen, displaying the given
@@ -165,7 +165,7 @@ final class LynxShelfPanel: NSPanel {
 
         // IMPORTANT: We must set the navigation state and current section
         // before updating the caches.
-        appState.navigationState.isIceBarPresented = true
+        appState.navigationState.isLynxShelfPresented = true
         currentSection = section
 
         let cacheTask = Task(timeout: .seconds(1)) {
@@ -214,7 +214,7 @@ final class LynxShelfPanel: NSPanel {
         super.close()
         contentView = nil
         currentSection = nil
-        appState?.navigationState.isIceBarPresented = false
+        appState?.navigationState.isLynxShelfPresented = false
     }
 }
 
