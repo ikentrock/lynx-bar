@@ -6,5 +6,4 @@
 import Foundation
 
 SourcePIDCache.shared.start()
-Listener.shared.activate()
-RunLoop.current.run()
+Listener.run()

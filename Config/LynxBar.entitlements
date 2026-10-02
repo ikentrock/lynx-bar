@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	Lynx Bar is signed without an Apple Developer team. Under the hardened
+	runtime, library validation only allows libraries from the same team, and
+	a team-less signature never matches, so the app couldn't load its own
+	debug dylib or embedded frameworks (Sparkle). The hardened runtime stays
+	on; only library validation is relaxed (libraries must still be signed).
+	A build signed with a team can drop this entitlement.
+	-->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+</dict>
+</plist>
