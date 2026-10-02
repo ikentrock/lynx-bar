@@ -10,15 +10,15 @@ struct HotkeysSettingsPane: View {
     @ObservedObject var settings: HotkeysSettings
 
     var body: some View {
-        IceForm {
-            IceSection("Menu Bar Sections") {
+        LynxForm {
+            LynxSection("Menu Bar Sections") {
                 hotkeyRecorder(forSection: .hidden)
                 hotkeyRecorder(forSection: .alwaysHidden)
             }
-            IceSection("Menu Bar Items") {
+            LynxSection("Menu Bar Items") {
                 hotkeyRecorder(forAction: .searchMenuBarItems)
             }
-            IceSection("Other") {
+            LynxSection("Other") {
                 hotkeyRecorder(forAction: .enableIceBar)
                 hotkeyRecorder(forAction: .toggleApplicationMenus)
             }

@@ -1,11 +1,11 @@
 //
-//  IceMenu.swift
+//  LynxMenu.swift
 //  Ice
 //
 
 import SwiftUI
 
-struct IceMenu<Title: View, Label: View, Content: View>: View {
+struct LynxMenu<Title: View, Label: View, Content: View>: View {
     private let title: Title
     private let label: Label
     private let content: Content

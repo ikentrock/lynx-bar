@@ -1,21 +1,21 @@
 //
-//  IceBarColorManager.swift
+//  LynxShelfColorManager.swift
 //  Ice
 //
 
 import Combine
 import SwiftUI
 
-final class IceBarColorManager: ObservableObject {
+final class LynxShelfColorManager: ObservableObject {
     @Published private(set) var colorInfo: MenuBarAverageColorInfo?
 
-    private weak var iceBarPanel: IceBarPanel?
+    private weak var iceBarPanel: LynxShelfPanel?
 
     private var windowImage: CGImage?
 
     private var cancellables = Set<AnyCancellable>()
 
-    func performSetup(with iceBarPanel: IceBarPanel) {
+    func performSetup(with iceBarPanel: LynxShelfPanel) {
         self.iceBarPanel = iceBarPanel
         configureCancellables()
     }

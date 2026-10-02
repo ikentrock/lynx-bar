@@ -1,14 +1,14 @@
 //
-//  IceGradient.swift
+//  LynxGradient.swift
 //  Ice
 //
 
 import SwiftUI
 
-// MARK: - IceGradient
+// MARK: - LynxGradient
 
 /// A custom gradient.
-struct IceGradient: Codable, Hashable {
+struct LynxGradient: Codable, Hashable {
     /// The color stops in the gradient.
     var stops: [ColorStop]
 
@@ -20,9 +20,9 @@ struct IceGradient: Codable, Hashable {
     }
 
     /// Returns a copy of the gradient with the given alpha value.
-    func withAlpha(_ alpha: CGFloat) -> IceGradient {
+    func withAlpha(_ alpha: CGFloat) -> LynxGradient {
         let newStops = stops.map { $0.withAlpha(alpha) }
-        return IceGradient(stops: newStops)
+        return LynxGradient(stops: newStops)
     }
 
     /// Returns a Cocoa representation of the gradient, converted to the
@@ -160,18 +160,18 @@ struct IceGradient: Codable, Hashable {
     }
 }
 
-// MARK: IceGradient Static Members
-extension IceGradient {
+// MARK: LynxGradient Static Members
+extension LynxGradient {
     /// The default menu bar tint gradient.
-    static let defaultMenuBarTint = IceGradient(stops: [
+    static let defaultMenuBarTint = LynxGradient(stops: [
         ColorStop.white(location: 0),
         ColorStop.black(location: 1),
     ])
 }
 
-// MARK: - IceGradient.ColorStop
+// MARK: - LynxGradient.ColorStop
 
-extension IceGradient {
+extension LynxGradient {
     /// A color stop in a gradient.
     struct ColorStop: Hashable {
         /// The stop's color.
@@ -209,8 +209,8 @@ extension IceGradient {
     }
 }
 
-// MARK: IceGradient.ColorStop: Codable
-extension IceGradient.ColorStop: Codable {
+// MARK: LynxGradient.ColorStop: Codable
+extension LynxGradient.ColorStop: Codable {
     private enum CodingKeys: CodingKey {
         case color
         case location
@@ -218,13 +218,13 @@ extension IceGradient.ColorStop: Codable {
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.color = try container.decode(IceColor.self, forKey: .color).cgColor
+        self.color = try container.decode(LynxColor.self, forKey: .color).cgColor
         self.location = try container.decode(CGFloat.self, forKey: .location)
     }
 
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(IceColor(cgColor: color), forKey: .color)
+        try container.encode(LynxColor(cgColor: color), forKey: .color)
         try container.encode(location, forKey: .location)
     }
 }
