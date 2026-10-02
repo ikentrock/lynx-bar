@@ -1,6 +1,6 @@
 //
 //  HIDEventManager.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa
@@ -218,14 +218,14 @@ extension HIDEventManager {
             return
         }
 
-        // Make sure clicking the Ice icon doesn't trigger rehide.
+        // Make sure clicking the Lynx icon doesn't trigger rehide.
         if let lynxIcon = appState.menuBarManager.controlItem(withName: .visible) {
             guard event.window !== lynxIcon.window else {
                 return
             }
         }
 
-        // Only continue if the click is not inside the Ice Bar, at
+        // Only continue if the click is not inside the Lynx Shelf, at
         // least one section is visible, and the mouse is not inside
         // the menu bar.
         guard
@@ -456,7 +456,7 @@ extension HIDEventManager {
     /// A Boolean value that indicates whether the mouse pointer is within
     /// the bounds of the menu bar.
     func isMouseInsideMenuBar(appState: AppState, screen: NSScreen) -> Bool {
-        // Ice icon must be vertically visible. Otherwise, we can infer
+        // Lynx icon must be vertically visible. Otherwise, we can infer
         // that the menu bar is hidden and the mouse is not inside.
         guard
             let lynxIcon = appState.menuBarManager.controlItem(withName: .visible),
@@ -528,20 +528,20 @@ extension HIDEventManager {
     }
 
     /// A Boolean value that indicates whether the mouse pointer is within
-    /// the bounds of the Ice Bar panel.
+    /// the bounds of the Lynx Shelf panel.
     func isMouseInsideLynxShelf(appState: AppState) -> Bool {
         guard let mouseLocation = MouseHelpers.locationAppKit else {
             return false
         }
         let panel = appState.menuBarManager.shelfPanel
         // Pad the frame to be more forgiving if the user accidentally
-        // moves their mouse outside of the Ice Bar.
+        // moves their mouse outside of the Lynx Shelf.
         let paddedFrame = panel.frame.insetBy(dx: -15, dy: -15)
         return paddedFrame.contains(mouseLocation)
     }
 
     /// A Boolean value that indicates whether the mouse pointer is within
-    /// the bounds of the Ice icon.
+    /// the bounds of the Lynx icon.
     func isMouseInsideLynxIcon(appState: AppState) -> Bool {
         guard
             let visibleSection = appState.menuBarManager.section(withName: .visible),

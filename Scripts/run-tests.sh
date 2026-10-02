@@ -30,4 +30,6 @@ fi
 build IceSettingsImporter ../LynxBar/Utilities/IceSettingsImporter.swift ../Shared/Utilities/Logging.swift
 run IceSettingsImporter
 
+../Scripts/check-names.sh || failed=1
+
 exit $failed

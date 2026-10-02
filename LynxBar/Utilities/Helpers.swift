@@ -1,6 +1,6 @@
 //
 //  Helpers.swift
-//  Ice
+//  LynxBar
 //
 
 // MARK: - With Mutable Copy

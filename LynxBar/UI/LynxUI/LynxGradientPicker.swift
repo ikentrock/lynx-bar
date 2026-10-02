@@ -1,6 +1,6 @@
 //
 //  LynxGradientPicker.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

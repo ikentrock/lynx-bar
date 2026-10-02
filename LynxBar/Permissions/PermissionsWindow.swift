@@ -1,6 +1,6 @@
 //
 //  PermissionsWindow.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

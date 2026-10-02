@@ -1,6 +1,6 @@
 //
 //  Extensions.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

@@ -1,6 +1,6 @@
 //
 //  MenuBarTintKind.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

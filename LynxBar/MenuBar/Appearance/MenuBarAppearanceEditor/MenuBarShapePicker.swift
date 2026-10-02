@@ -1,6 +1,6 @@
 //
 //  MenuBarShapePicker.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

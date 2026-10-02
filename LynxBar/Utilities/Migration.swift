@@ -1,6 +1,6 @@
 //
 //  Migration.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

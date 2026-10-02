@@ -1,6 +1,6 @@
 //
 //  BetaBadge.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

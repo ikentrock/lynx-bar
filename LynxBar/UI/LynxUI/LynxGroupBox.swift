@@ -1,6 +1,6 @@
 //
 //  LynxGroupBox.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Lynx Bar is a fork of [Ice](https://github.com/jordanbaird/Ice) (remote `upstream`), a macOS menu bar manager written in Swift/SwiftUI + AppKit. It is based on upstream's unreleased `macos-26` branch (merged 2026-10-02). Targets macOS 14+ (the app relies on APIs introduced in 14; earlier versions are not supported). Licensed GPL-3.0.
 
-The app is `Lynx Bar.app`, bundle ID `com.ikentrock.LynxBar`; its helper is `com.ikentrock.LynxBar.MenuBarItemService`. The Xcode target, scheme and Swift module are still named `Ice`, as are most type names (`IceBar` is the "Lynx Shelf") and the `//  Ice` file headers — an internal rename is planned separately. Identity and signing live in `Config/Base.xcconfig`. Updates are off: there is no `SUFeedURL`, so Sparkle never starts. Stored defaults keys keep their upstream names (`IceIcon`, `UseIceBar`, `Ice.ControlItem.*`); never rename them.
+The app is `Lynx Bar.app`, bundle ID `com.ikentrock.LynxBar`; its helper is `com.ikentrock.LynxBar.MenuBarItemService`. The Xcode project is `LynxBar.xcodeproj` with the `LynxBar` scheme, target and Swift module. Sources live in `LynxBar/`, and file headers read `//  LynxBar`. Some names still mention Ice on purpose: stored defaults keys and raw values, `IceSettingsImporter`, and references to upstream. Identity and signing live in `Config/Base.xcconfig`. Updates are off: there is no `SUFeedURL`, so Sparkle never starts. Stored defaults keys keep their upstream names (`IceIcon`, `UseIceBar`, `Ice.ControlItem.*`); never rename them.
 
 Design docs and plans live in `docs/superpowers/`.
 
 ## Commands
 
-There is a single Xcode project with one app scheme (`Ice`) and **no test target**. Building needs full Xcode, not just the Command Line Tools (`xcode-select -p` must point inside `Xcode.app`).
+There is a single Xcode project with one app scheme (`LynxBar`) and **no test target**. Building needs full Xcode, not just the Command Line Tools (`xcode-select -p` must point inside `Xcode.app`).
 
 ```sh
 # Build (signing comes from Config/Base.xcconfig: ad-hoc by default)
@@ -21,6 +21,7 @@ xcodebuild -project LynxBar.xcodeproj -scheme LynxBar -configuration Debug build
 # Script tests (standalone swiftc programs under Scripts/Tests)
 Scripts/run-tests.sh
 LYNX_TEST_CERT=<certificate SHA-1> Scripts/run-tests.sh   # also tests certificate signing
+Scripts/check-names.sh      # also run by run-tests.sh: fails if Ice-derived names or changed stored keys creep in
 
 # Lint — CI runs exactly this on every Swift change and fails on warnings
 swiftlint --strict          # brew install swiftlint
@@ -33,16 +34,16 @@ SPM dependencies are resolved via the project (no Package.swift): Sparkle, Launc
 ## Lint conventions that CI enforces
 
 `.swiftlint.yml` is strict, opinionated, and only lints `LynxBar/`; the non-obvious rules:
-- Every file must start with the header `//\n//  <FileName>.swift\n//  Ice\n//` (files in `Shared/` and `MenuBarItemService/` use their folder name instead).
+- Every file must start with the header `//\n//  <FileName>.swift\n//  LynxBar\n//` (files in `Shared/` and `MenuBarItemService/` use their folder name instead).
 - 4-space indentation, no tabs; mandatory trailing commas in multiline collections.
 - `force_unwrapping` and implicitly unwrapped optionals are errors.
 - `@objc` must be immediately followed by `dynamic` where both are used.
 
 ## Architecture
 
-**Entry and state.** `Main/IceApp.swift` declares the scenes; `Main/AppDelegate.swift` runs `IceSettingsImporter` (one-time copy of Ice's defaults), then creates `AppState`, then runs `MigrationManager.migrateAll()` (versioned migrations in `Utilities/Migration.swift` — add a new `migrateX_Y_Z` when changing stored formats). `Main/AppState.swift` is the `@MainActor` hub owning `settings`, `permissions`, `navigationState`, `menuBarManager`, `appearanceManager`, `spacingManager`, `itemManager`, `imageCache`, `hidEventManager`, `updatesManager` and `userNotificationManager`; managers are wired up in its `setupTask`, and their `objectWillChange` is forwarded so SwiftUI views observe `AppState`.
+**Entry and state.** `Main/LynxBarApp.swift` declares the scenes; `Main/AppDelegate.swift` runs `IceSettingsImporter` (one-time copy of Ice's defaults), then creates `AppState`, then runs `MigrationManager.migrateAll()` (versioned migrations in `Utilities/Migration.swift` — add a new `migrateX_Y_Z` when changing stored formats). `Main/AppState.swift` is the `@MainActor` hub owning `settings`, `permissions`, `navigationState`, `menuBarManager`, `appearanceManager`, `spacingManager`, `itemManager`, `imageCache`, `hidEventManager`, `updatesManager` and `userNotificationManager`; managers are wired up in its `setupTask`, and their `objectWillChange` is forwarded so SwiftUI views observe `AppState`.
 
-**How hiding works.** Lynx Bar does not remove other apps' status items. It owns three `NSStatusItem`s (`MenuBar/ControlItem/ControlItem.swift`, identifiers `Ice.ControlItem.Visible/Hidden/AlwaysHidden`) that act as section dividers. To hide a section, the divider's length is set to `Lengths.expanded` (10,000 pt), pushing everything to its left off-screen. `MenuBar/MenuBarSection.swift` models the visible / hidden / always-hidden sections, including rehide timers and whether to show items in the Lynx Shelf (`MenuBar/IceBar/`, a panel below the menu bar).
+**How hiding works.** Lynx Bar does not remove other apps' status items. It owns three `NSStatusItem`s (`MenuBar/ControlItem/ControlItem.swift`, identifiers `Ice.ControlItem.Visible/Hidden/AlwaysHidden`) that act as section dividers. To hide a section, the divider's length is set to `Lengths.expanded` (10,000 pt), pushing everything to its left off-screen. `MenuBar/MenuBarSection.swift` models the visible / hidden / always-hidden sections, including rehide timers and whether to show items in the Lynx Shelf (`MenuBar/LynxShelf/`, `LynxShelfPanel`, a panel below the menu bar).
 
 **macOS 26 item identity.** On macOS 26 every menu bar item window is owned by Control Center, so the owning app can't be read from the window list. The `MenuBarItemService` XPC helper (`MenuBarItemService/`, code shared via `Shared/`) maps windows to their source apps using Accessibility (`SourcePIDCache`). App and helper talk over the C XPC API and trust each other only when signed with the same certificate and the expected identifier (`Shared/Services/PeerCodeRequirement.swift`, `MenuBarItemServiceIdentity.swift`). If the helper is refused, `MenuBarItemManager.helperFailureReason` is set, the UI shows a message, and items are neither cached nor moved.
 

@@ -1,6 +1,6 @@
 //
 //  EventMonitor.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

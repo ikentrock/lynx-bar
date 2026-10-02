@@ -1,6 +1,6 @@
 //
 //  UserNotificationIdentifier.swift
-//  Ice
+//  LynxBar
 //
 
 /// An identifier for a user notification.

@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  Ice
+//  LynxBar
 //
 
 import OSLog

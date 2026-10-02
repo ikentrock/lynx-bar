@@ -1,6 +1,6 @@
 //
 //  RunLoopLocalEventMonitor.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

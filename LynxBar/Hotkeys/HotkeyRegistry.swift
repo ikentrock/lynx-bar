@@ -1,6 +1,6 @@
 //
 //  HotkeyRegistry.swift
-//  Ice
+//  LynxBar
 //
 
 import Carbon.HIToolbox
@@ -53,7 +53,7 @@ final class HotkeyRegistry {
         }
     }
 
-    private let signature = OSType(1231250720) // OSType for Ice
+    private let signature = OSType(1231250720) // Carbon hotkey signature ('Ice ', inherited from upstream; in-process only, never persisted)
 
     private var eventHandlerRef: EventHandlerRef?
 

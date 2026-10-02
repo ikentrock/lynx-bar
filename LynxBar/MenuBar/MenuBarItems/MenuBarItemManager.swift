@@ -1,6 +1,6 @@
 //
 //  MenuBarItemManager.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

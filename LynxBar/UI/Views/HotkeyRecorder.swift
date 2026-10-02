@@ -1,6 +1,6 @@
 //
 //  HotkeyRecorder.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

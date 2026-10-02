@@ -1,6 +1,6 @@
 //
 //  AdvancedSettings.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

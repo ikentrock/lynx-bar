@@ -1,6 +1,6 @@
 //
 //  ObjectStorage.swift
-//  Ice
+//  LynxBar
 //
 
 import ObjectiveC

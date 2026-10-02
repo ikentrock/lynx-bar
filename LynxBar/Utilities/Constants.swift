@@ -1,6 +1,6 @@
 //
 //  Constants.swift
-//  Ice
+//  LynxBar
 //
 
 import Foundation

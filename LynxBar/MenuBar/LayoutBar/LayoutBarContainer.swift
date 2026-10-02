@@ -1,6 +1,6 @@
 //
 //  LayoutBarContainer.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

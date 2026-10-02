@@ -1,6 +1,6 @@
 //
 //  AboutSettingsPane.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

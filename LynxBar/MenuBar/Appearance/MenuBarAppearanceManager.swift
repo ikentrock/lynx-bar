@@ -1,6 +1,6 @@
 //
 //  MenuBarAppearanceManager.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

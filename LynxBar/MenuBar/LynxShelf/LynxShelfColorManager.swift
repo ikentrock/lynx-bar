@@ -1,6 +1,6 @@
 //
 //  LynxShelfColorManager.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

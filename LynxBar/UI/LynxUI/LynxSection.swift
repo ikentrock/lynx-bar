@@ -1,6 +1,6 @@
 //
 //  LynxSection.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

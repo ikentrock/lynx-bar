@@ -1,6 +1,6 @@
 //
 //  LynxColor.swift
-//  Ice
+//  LynxBar
 //
 
 import CoreGraphics

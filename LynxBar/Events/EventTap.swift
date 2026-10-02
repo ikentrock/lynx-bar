@@ -1,6 +1,6 @@
 //
 //  EventTap.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

@@ -1,6 +1,6 @@
 //
 //  GeneralSettingsPane.swift
-//  Ice
+//  LynxBar
 //
 
 import LaunchAtLogin
@@ -63,7 +63,7 @@ struct GeneralSettingsPane: View {
         LaunchAtLogin.Toggle()
     }
 
-    // MARK: Ice Icon Options
+    // MARK: Lynx Icon Options
 
     @ViewBuilder
     private var lynxIconOptions: some View {
@@ -170,7 +170,7 @@ struct GeneralSettingsPane: View {
         }
     }
 
-    // MARK: Ice Bar Options
+    // MARK: Lynx Shelf Options
 
     @ViewBuilder
     private var lynxShelfOptions: some View {

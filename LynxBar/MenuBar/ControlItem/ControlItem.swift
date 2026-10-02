@@ -1,6 +1,6 @@
 //
 //  ControlItem.swift
-//  Ice
+//  LynxBar
 //
 
 import Cocoa

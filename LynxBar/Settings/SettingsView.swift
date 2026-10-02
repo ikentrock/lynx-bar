@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  Ice
+//  LynxBar
 //
 
 import SwiftUI

@@ -1,6 +1,6 @@
 //
 //  ControlItemImageSet.swift
-//  Ice
+//  LynxBar
 //
 
 /// A named set of images that are used by control items.

@@ -1,6 +1,6 @@
 //
 //  Permission.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine

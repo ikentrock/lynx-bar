@@ -1,6 +1,6 @@
 //
 //  MenuBarManager.swift
-//  Ice
+//  LynxBar
 //
 
 import Combine
@@ -40,7 +40,7 @@ final class MenuBarManager: ObservableObject {
     /// A Boolean value that indicates whether the application menus are hidden.
     private var isHidingApplicationMenus = false
 
-    /// The panel that contains the Ice Bar interface.
+    /// The panel that contains the Lynx Shelf interface.
     let shelfPanel = LynxShelfPanel()
 
     /// The panel that contains the menu bar search interface.
@@ -156,7 +156,7 @@ final class MenuBarManager: ObservableObject {
 
                 // Don't continue if:
                 //   * The "HideApplicationMenus" setting isn't enabled.
-                //   * Using the Ice Bar.
+                //   * Using the Lynx Shelf.
                 //   * The menu bar is hidden by the system.
                 //   * The active space is fullscreen.
                 //   * The settings window is visible.
