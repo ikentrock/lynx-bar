@@ -16,7 +16,7 @@ There is a single Xcode project with one app scheme (`Ice`) and **no test target
 
 ```sh
 # Build (signing comes from Config/Base.xcconfig: ad-hoc by default)
-xcodebuild -project Ice.xcodeproj -scheme Ice -configuration Debug build
+xcodebuild -project LynxBar.xcodeproj -scheme LynxBar -configuration Debug build
 
 # Script tests (standalone swiftc programs under Scripts/Tests)
 Scripts/run-tests.sh
@@ -32,7 +32,7 @@ SPM dependencies are resolved via the project (no Package.swift): Sparkle, Launc
 
 ## Lint conventions that CI enforces
 
-`.swiftlint.yml` is strict, opinionated, and only lints `Ice/`; the non-obvious rules:
+`.swiftlint.yml` is strict, opinionated, and only lints `LynxBar/`; the non-obvious rules:
 - Every file must start with the header `//\n//  <FileName>.swift\n//  Ice\n//` (files in `Shared/` and `MenuBarItemService/` use their folder name instead).
 - 4-space indentation, no tabs; mandatory trailing commas in multiline collections.
 - `force_unwrapping` and implicitly unwrapped optionals are errors.
