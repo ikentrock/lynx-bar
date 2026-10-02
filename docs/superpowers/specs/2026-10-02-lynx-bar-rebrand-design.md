@@ -161,9 +161,10 @@ Each side computes its peer requirement **from its own signature** at launch:
 - New `IceSettingsImporter` runs at launch **before** `Migration.migrateAll()`. Ice's stored
   formats then still pass through upstream's migrations (for example `migrate0_11_13`, which
   rewrites control item position keys).
-- The import runs only if `hasImportedIceSettings` isn't set and
-  `UserDefaults(suiteName: "com.jordanbaird.Ice")` has data. It copies every key that Lynx Bar
-  doesn't already have, then sets the flag. Ice's domain is only read. It deliberately
+- The import runs only if `hasImportedIceSettings` isn't set. If Ice's persistent domain
+  (`persistentDomain(forName: "com.jordanbaird.Ice")`) has data, it copies every key that Lynx
+  Bar doesn't already have. Either way it then sets the flag, so the import happens on the
+  first launch or never. Ice's domain is only read. It deliberately
   doesn't check for an "empty" Lynx Bar domain, because anything that writes a default before
   the importer runs would silently skip the import.
 - Login-item state is stored per app by macOS, so it isn't imported and starts off.
@@ -173,13 +174,17 @@ Each side computes its peer requirement **from its own signature** at launch:
 ### 7. Branding: UI and repo
 
 - User-facing "Ice" strings become "Lynx Bar": window titles, About, Quit, permissions text,
-  alerts and the menu bar item's accessibility label. Code identifiers and log categories stay
-  as they are until Step 2.
+  alerts and the menu bar item's accessibility label. Code identifiers, log categories and
+  stored keys (`Ice.ControlItem.*`, `IceIcon`, `UseIceBar` and so on) stay as they are until
+  Step 2. Stored keys never change, so saved settings keep working.
+- **Feature names.** The "Ice Bar" becomes the **"Lynx Shelf"** and the "Ice icon" becomes the
+  **"Lynx icon"**, because "Lynx Bar Bar" would be confusing. Decided 2026-10-02.
 - About pane:
   - The repo link goes to `https://github.com/ikentrock/lynx-bar`.
   - "Support Ice" is removed.
   - A "Based on Ice by Jordan Baird" credit links to the upstream repo.
-  - Acknowledgements keep CompactSlider and note that it is vendored.
+  - The Acknowledgements PDF is unchanged. It already credits CompactSlider, and the
+    vendoring is recorded in `Packages/CompactSlider/VENDORED.md`.
 - **Menu bar glyph.** A new "Lynx" control-item image set (a template image) becomes the
   default. The "Ice Cube" option is removed from the picker, and a stored "Ice Cube" value
   decodes to "Lynx", so imported settings keep working.
