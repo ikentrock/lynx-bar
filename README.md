@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="Ice/Resources/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width=200 height=200>
+    <img src="LynxBar/Resources/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width=200 height=200>
     <h1>Lynx Bar</h1>
 </div>
 
@@ -28,7 +28,7 @@ You need macOS 14 or later and Xcode (the full app, not only the Command Line To
 3. **Build.**
 
    ```sh
-   xcodebuild -project Ice.xcodeproj -scheme Ice -configuration Release build
+   xcodebuild -project LynxBar.xcodeproj -scheme LynxBar -configuration Release build
    ```
 
    Copy `Lynx Bar.app` from the build products into `/Applications` (or `~/Applications`).

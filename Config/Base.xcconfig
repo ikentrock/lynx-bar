@@ -1,6 +1,6 @@
 // Base.xcconfig
 // Shared build settings for Lynx Bar. Applied at project level; targets may
-// not override the settings below (see Ice.xcodeproj build settings).
+// not override the settings below (see LynxBar.xcodeproj build settings).
 
 // The app's bundle identifier. The helper's is derived from it.
 LYNX_BUNDLE_ID = com.ikentrock.LynxBar

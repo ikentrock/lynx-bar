@@ -43,7 +43,7 @@
 
 /* Begin PBXFileReference section */
 		4C59BA5E2E8E100000000001 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Base.xcconfig; path = Config/Base.xcconfig; sourceTree = "<group>"; };
-		7166832A2A767E6A006ABF84 /* Ice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ice.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7166832A2A767E6A006ABF84 /* Lynx Bar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Lynx Bar.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7188A6832E27F9ED008F131D /* MenuBarItemService.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = MenuBarItemService.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -61,14 +61,14 @@
 				Resources/Acknowledgements.rtf,
 				Resources/Info.plist,
 			);
-			target = 716683292A767E6A006ABF84 /* Ice */;
+			target = 716683292A767E6A006ABF84 /* LynxBar */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7188A6842E27F9ED008F131D /* MenuBarItemService */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7188A6912E27F9ED008F131D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = MenuBarItemService; sourceTree = "<group>"; };
 		7188A69E2E280BB4008F131D /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shared; sourceTree = "<group>"; };
-		71BDFBE12C978E2A00EF145F /* Ice */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (71BDFC6C2C978E2A00EF145F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Ice; sourceTree = "<group>"; };
+		71BDFBE12C978E2A00EF145F /* LynxBar */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (71BDFC6C2C978E2A00EF145F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = LynxBar; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,7 +101,7 @@
 			children = (
 				4C59BA5E2E8E100000000001 /* Base.xcconfig */,
 				7188A69E2E280BB4008F131D /* Shared */,
-				71BDFBE12C978E2A00EF145F /* Ice */,
+				71BDFBE12C978E2A00EF145F /* LynxBar */,
 				7188A6842E27F9ED008F131D /* MenuBarItemService */,
 				7166832B2A767E6A006ABF84 /* Products */,
 			);
@@ -110,7 +110,7 @@
 		7166832B2A767E6A006ABF84 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7166832A2A767E6A006ABF84 /* Ice.app */,
+				7166832A2A767E6A006ABF84 /* Lynx Bar.app */,
 				7188A6832E27F9ED008F131D /* MenuBarItemService.xpc */,
 			);
 			name = Products;
@@ -119,9 +119,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		716683292A767E6A006ABF84 /* Ice */ = {
+		716683292A767E6A006ABF84 /* LynxBar */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 716683392A767E6B006ABF84 /* Build configuration list for PBXNativeTarget "Ice" */;
+			buildConfigurationList = 716683392A767E6B006ABF84 /* Build configuration list for PBXNativeTarget "LynxBar" */;
 			buildPhases = (
 				716683262A767E6A006ABF84 /* Sources */,
 				716683272A767E6A006ABF84 /* Frameworks */,
@@ -136,9 +136,9 @@
 			);
 			fileSystemSynchronizedGroups = (
 				7188A69E2E280BB4008F131D /* Shared */,
-				71BDFBE12C978E2A00EF145F /* Ice */,
+				71BDFBE12C978E2A00EF145F /* LynxBar */,
 			);
-			name = Ice;
+			name = LynxBar;
 			packageProductDependencies = (
 				175061902B1543DD003144CD /* LaunchAtLogin */,
 				1787C4262B16890B002F50DF /* AXSwift */,
@@ -147,8 +147,8 @@
 				7127A9FE2C4886D100D99DEF /* IfritStatic */,
 				71A065082E680C620087DB38 /* Semaphore */,
 			);
-			productName = Ice;
-			productReference = 7166832A2A767E6A006ABF84 /* Ice.app */;
+			productName = LynxBar;
+			productReference = 7166832A2A767E6A006ABF84 /* Lynx Bar.app */;
 			productType = "com.apple.product-type.application";
 		};
 		7188A6822E27F9ED008F131D /* MenuBarItemService */ = {
@@ -193,7 +193,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 716683252A767E6A006ABF84 /* Build configuration list for PBXProject "Ice" */;
+			buildConfigurationList = 716683252A767E6A006ABF84 /* Build configuration list for PBXProject "LynxBar" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -214,7 +214,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				716683292A767E6A006ABF84 /* Ice */,
+				716683292A767E6A006ABF84 /* LynxBar */,
 				7188A6822E27F9ED008F131D /* MenuBarItemService */,
 			);
 		};
@@ -423,7 +423,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Ice/Resources/Info.plist;
+				INFOPLIST_FILE = LynxBar/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -431,7 +431,7 @@
 					"@executable_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(LYNX_BUNDLE_ID)";
-				PRODUCT_MODULE_NAME = Ice;
+				PRODUCT_MODULE_NAME = LynxBar;
 				PRODUCT_NAME = "Lynx Bar";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -453,7 +453,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Ice/Resources/Info.plist;
+				INFOPLIST_FILE = LynxBar/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -461,7 +461,7 @@
 					"@executable_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(LYNX_BUNDLE_ID)";
-				PRODUCT_MODULE_NAME = Ice;
+				PRODUCT_MODULE_NAME = LynxBar;
 				PRODUCT_NAME = "Lynx Bar";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -520,7 +520,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		716683252A767E6A006ABF84 /* Build configuration list for PBXProject "Ice" */ = {
+		716683252A767E6A006ABF84 /* Build configuration list for PBXProject "LynxBar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				716683372A767E6B006ABF84 /* Debug */,
@@ -529,7 +529,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		716683392A767E6B006ABF84 /* Build configuration list for PBXNativeTarget "Ice" */ = {
+		716683392A767E6B006ABF84 /* Build configuration list for PBXNativeTarget "LynxBar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7166833A2A767E6B006ABF84 /* Debug */,

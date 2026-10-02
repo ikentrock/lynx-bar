@@ -1,5 +1,5 @@
 included:
-  - Ice
+  - LynxBar
 
 disabled_rules:
   - cyclomatic_complexity
