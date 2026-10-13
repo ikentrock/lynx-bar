@@ -205,6 +205,7 @@ final class MenuBarSection {
         }
 
         startRehideChecks()
+        appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
     }
 
     /// Hides the section.
@@ -226,6 +227,7 @@ final class MenuBarSection {
         }
 
         stopRehideChecks()
+        appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
     }
 
     /// Toggles the visibility of the section.
