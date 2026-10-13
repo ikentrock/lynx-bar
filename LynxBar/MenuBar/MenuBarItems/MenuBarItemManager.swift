@@ -29,6 +29,35 @@ final class MenuBarItemManager: ObservableObject {
     /// The message shown on macOS 27, where items aren't listed yet.
     static let unsupportedOnMacOS27Message = "Showing menu bar items isn't supported on macOS 27 yet."
 
+    /// How wide each section divider should be to hide its section on
+    /// macOS 27, keyed by the divider's identifier. A divider that hasn't
+    /// been measured yet is absent. See `updateHostedHidingWidths()`.
+    @Published private(set) var hostedHidingWidths = [ControlItem.Identifier: CGFloat]()
+
+    /// Dividers that the system dropped from the bar on macOS 27. They take
+    /// their standard length until a measurement finds them in the bar again.
+    @Published private(set) var hostedDividersToReset = Set<ControlItem.Identifier>()
+
+    /// Resets in a row per divider, to stop a reflow loop.
+    var hostedResetCounts = [ControlItem.Identifier: Int]()
+
+    /// Requests a hiding-width measurement on macOS 27.
+    let hostedMeasurementRequests = PassthroughSubject<Void, Never>()
+
+    /// Updates ``hostedHidingWidths``.
+    func setHostedHidingWidths(_ widths: [ControlItem.Identifier: CGFloat]) {
+        if widths != hostedHidingWidths {
+            hostedHidingWidths = widths
+        }
+    }
+
+    /// Updates ``hostedDividersToReset``.
+    func setHostedDividersToReset(_ identifiers: Set<ControlItem.Identifier>) {
+        if identifiers != hostedDividersToReset {
+            hostedDividersToReset = identifiers
+        }
+    }
+
     /// Records that menu bar items can't be listed.
     func setItemsUnavailable(message: String, reason: String) {
         logger.error("Menu bar items unavailable: \(reason, privacy: .public)")
@@ -37,7 +66,7 @@ final class MenuBarItemManager: ObservableObject {
     }
 
     /// Logger for the menu bar item manager.
-    private nonisolated let logger = Logger.menuBarItemManager
+    nonisolated let logger = Logger.menuBarItemManager
 
     /// Semaphore to prevent overlapping event operations.
     private nonisolated let eventSemaphore = AsyncSemaphore(value: 1)
@@ -68,11 +97,29 @@ final class MenuBarItemManager: ObservableObject {
         self.appState = appState
         await cacheItemsRegardless()
         configureCancellables(with: appState)
+        requestHostedMeasurement()
     }
 
     /// Configures the internal observers for the manager.
     private func configureCancellables(with appState: AppState) {
         var c = Set<AnyCancellable>()
+
+        if #available(macOS 27.0, *) {
+            // The room for hiding depends on the frontmost app's menu and on
+            // the screen layout (see `updateHostedHidingWidths()`).
+            hostedMeasurementRequests
+                .merge(with: NSWorkspace.shared.notificationCenter
+                    .publisher(for: NSWorkspace.didActivateApplicationNotification)
+                    .map { _ in })
+                .merge(with: NotificationCenter.default
+                    .publisher(for: NSApplication.didChangeScreenParametersNotification)
+                    .map { _ in })
+                .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+                .sink { [weak self] in
+                    self?.updateHostedHidingWidths()
+                }
+                .store(in: &c)
+        }
 
         NSWorkspace.shared.publisher(for: \.runningApplications)
             .delay(for: 0.25, scheduler: DispatchQueue.main)

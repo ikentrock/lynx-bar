@@ -46,6 +46,10 @@ enum AXHelpers {
         queue.sync { try? element.role() }
     }
 
+    static func menuBar(for app: Application) -> UIElement? {
+        queue.sync { try? app.attribute(.menuBar) }
+    }
+
     static func windows(for app: Application) -> [UIElement] {
         queue.sync { try? app.windows() } ?? []
     }
