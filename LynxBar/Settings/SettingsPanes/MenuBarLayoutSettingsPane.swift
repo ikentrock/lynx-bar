@@ -51,8 +51,8 @@ struct MenuBarLayoutSettingsPane: View {
         .blur(radius: hasItems ? 0 : 5)
         .allowsHitTesting(hasItems)
         .overlay {
-            if itemManager.helperFailureReason != nil {
-                Text(MenuBarItemManager.helperUnavailableMessage)
+            if let message = itemManager.itemsUnavailableMessage {
+                Text(message)
                     .font(.title2)
                     .multilineTextAlignment(.center)
                     .padding()

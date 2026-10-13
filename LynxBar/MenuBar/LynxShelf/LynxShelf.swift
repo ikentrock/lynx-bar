@@ -361,8 +361,8 @@ private struct LynxShelfContentView: View {
         } else if menuBarManager.isMenuBarHiddenBySystemUserDefaults {
             Text("Lynx Bar cannot display menu bar items for automatically hidden menu bars")
                 .padding(.horizontal, 10)
-        } else if itemManager.helperFailureReason != nil {
-            Text(MenuBarItemManager.helperUnavailableMessage)
+        } else if let message = itemManager.itemsUnavailableMessage {
+            Text(message)
                 .padding(.horizontal, 10)
         } else if itemManager.itemCache.managedItems.isEmpty {
             HStack {

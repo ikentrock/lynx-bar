@@ -250,8 +250,8 @@ private struct MenuBarSearchContentView: View {
 
     @ViewBuilder
     private var mainContent: some View {
-        if itemManager.helperFailureReason != nil {
-            Text(MenuBarItemManager.helperUnavailableMessage)
+        if let message = itemManager.itemsUnavailableMessage {
+            Text(message)
                 .font(.title3)
                 .multilineTextAlignment(.center)
                 .padding()

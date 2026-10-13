@@ -31,6 +31,17 @@ final class GeneralSettings: ObservableObject {
     /// in a separate bar below the menu bar.
     @Published var useLynxShelf = false
 
+    /// A Boolean value that indicates whether the Lynx Shelf is in use.
+    ///
+    /// Always `false` on macOS 27, where menu bar items can't be listed yet.
+    /// The stored setting is kept, so the Shelf comes back once they can.
+    var isLynxShelfActive: Bool {
+        if #available(macOS 27.0, *) {
+            return false
+        }
+        return useLynxShelf
+    }
+
     /// The location where the Lynx Shelf appears.
     @Published var lynxShelfLocation: LynxShelfLocation = .dynamic
 
