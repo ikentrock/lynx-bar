@@ -60,27 +60,6 @@ enum HostedHidingWidth {
         return abs(old - new) >= threshold
     }
 
-    /// Returns where the items that must stay visible begin.
-    ///
-    /// - Parameters:
-    ///   - dividerSlot: The divider's slot in the agent's layout, or `nil` if
-    ///     the divider isn't in the bar.
-    ///   - otherSlots: Every other item's slot.
-    ///   - chevron: The overflow button's frame, if it's shown. Overflowed
-    ///     items are listed piled up against it and aren't in the bar.
-    static func visibleFrom(dividerSlot: CGRect?, otherSlots: [CGRect], chevron: CGRect?) -> CGFloat? {
-        if let dividerSlot {
-            return dividerSlot.maxX
-        }
-        let inBar = otherSlots.filter { slot in
-            guard let chevron else {
-                return true
-            }
-            return slot.minX >= chevron.maxX
-        }
-        return inBar.map(\.minX).min()
-    }
-
     /// Returns the slot that belongs to the status item window with the
     /// given frame. Slots and windows share the x axis.
     static func slot(forWindowFrame windowFrame: CGRect, in ownSlots: [CGRect]) -> CGRect? {
@@ -93,5 +72,68 @@ enum HostedHidingWidth {
     /// `resetCount` resets in a row.
     static func shouldReset(resetCount: Int) -> Bool {
         resetCount < maxResets
+    }
+
+    /// What to do with a divider after reading the agent's layout.
+    enum DividerAction: Equatable {
+        /// Leave the divider and its width alone.
+        case ignore
+        /// Measure the room from the divider's slot.
+        case measure
+        /// Measure, then measure again later to check the applied width.
+        case measureAndVerify
+        /// Give the divider its standard length so it returns to the bar.
+        case reset
+        /// Stop resetting; the divider keeps dropping out of the bar.
+        case giveUp
+    }
+
+    /// The reset state of one divider.
+    ///
+    /// A divider the system drops while hiding is reset to its standard
+    /// length, then measured and verified once it's back. Showing the
+    /// section re-arms it.
+    struct DividerState: Equatable {
+        /// Resets in a row without a verified hiding width.
+        private(set) var resetCount = 0
+
+        /// Whether the divider must take its standard length.
+        private(set) var isResetting = false
+
+        /// Whether resetting stopped until the section is shown again.
+        private(set) var hasGivenUp = false
+
+        /// Updates the state from a layout reading and returns what to do.
+        ///
+        /// - Parameters:
+        ///   - hasSlot: Whether the divider has a slot in the agent's layout.
+        ///   - isHiding: Whether the divider's section is hidden.
+        ///   - isCovered: Whether the divider is inside another hidden
+        ///     section's region, so its slot says nothing about its room.
+        mutating func update(hasSlot: Bool, isHiding: Bool, isCovered: Bool) -> DividerAction {
+            guard isHiding else {
+                self = DividerState()
+                return hasSlot ? .measure : .ignore
+            }
+            if isCovered || hasGivenUp {
+                return .ignore
+            }
+            guard hasSlot else {
+                guard shouldReset(resetCount: resetCount) else {
+                    hasGivenUp = true
+                    isResetting = true
+                    return .giveUp
+                }
+                resetCount += 1
+                isResetting = true
+                return .reset
+            }
+            if isResetting {
+                isResetting = false
+                return .measureAndVerify
+            }
+            resetCount = 0
+            return .measure
+        }
     }
 }

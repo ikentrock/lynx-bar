@@ -66,35 +66,6 @@ expect(!HostedHidingWidth.shouldApply(old: 500, new: 507.9), "changes under 8 pt
 expect(HostedHidingWidth.shouldApply(old: 500, new: 508), "changes of 8 pt are applied")
 expect(HostedHidingWidth.shouldApply(old: 500, new: 420), "a shrinking room is applied")
 
-// MARK: visibleFrom
-
-let divider = CGRect(x: 684, y: 0, width: 916, height: 30)
-expect(
-    HostedHidingWidth.visibleFrom(dividerSlot: divider, otherSlots: [], chevron: nil) == 1600,
-    "a divider in the bar bounds the visible items with its right edge"
-)
-let piledUp = [
-    CGRect(x: 562, y: 0, width: 38, height: 30),
-    CGRect(x: 553, y: 0, width: 47, height: 30),
-]
-let onBar = [
-    CGRect(x: 608, y: 0, width: 36, height: 30),
-    CGRect(x: 1600, y: 0, width: 32, height: 30),
-]
-let chevron = CGRect(x: 583, y: 1, width: 18, height: 28)
-expect(
-    HostedHidingWidth.visibleFrom(dividerSlot: nil, otherSlots: piledUp + onBar, chevron: chevron) == 608,
-    "without a divider slot, the leftmost item right of the chevron bounds the room"
-)
-expect(
-    HostedHidingWidth.visibleFrom(dividerSlot: nil, otherSlots: onBar, chevron: nil) == 608,
-    "without a chevron, every item counts"
-)
-expect(
-    HostedHidingWidth.visibleFrom(dividerSlot: nil, otherSlots: [], chevron: nil) == nil,
-    "an empty bar can't be measured"
-)
-
 // MARK: slot matching
 
 let ownSlots = [
@@ -110,6 +81,64 @@ expect(
     HostedHidingWidth.slot(forWindowFrame: CGRect(x: 684, y: 1049, width: 1016, height: 33), in: ownSlots) == nil,
     "a dropped divider has no slot even though its window claims a place"
 )
+
+// MARK: divider state
+
+do {
+    var state = HostedHidingWidth.DividerState()
+    expect(
+        state.update(hasSlot: false, isHiding: false, isCovered: false) == .ignore,
+        "a shown divider without a slot isn't measured (review #1)"
+    )
+    expect(
+        state.update(hasSlot: true, isHiding: false, isCovered: false) == .measure,
+        "a shown divider with a slot is measured"
+    )
+}
+
+do {
+    var state = HostedHidingWidth.DividerState()
+    expect(state.update(hasSlot: false, isHiding: true, isCovered: false) == .reset, "a dropped divider is reset")
+    expect(state.isResetting, "a reset divider takes its standard length")
+    expect(
+        state.update(hasSlot: true, isHiding: true, isCovered: false) == .measureAndVerify,
+        "a divider back after a reset is measured and verified again (review #2)"
+    )
+    expect(!state.isResetting, "the hiding length is applied again after a reset")
+    expect(state.update(hasSlot: true, isHiding: true, isCovered: false) == .measure, "a verified divider is measured")
+    expect(state.resetCount == 0, "a verified divider re-arms the reset count (review #2)")
+}
+
+do {
+    var state = HostedHidingWidth.DividerState()
+    for _ in 0..<3 {
+        _ = state.update(hasSlot: false, isHiding: true, isCovered: false)
+        _ = state.update(hasSlot: true, isHiding: true, isCovered: false)
+    }
+    expect(
+        state.update(hasSlot: false, isHiding: true, isCovered: false) == .giveUp,
+        "a divider that drops after every reapply gives up after three resets"
+    )
+    expect(state.isResetting, "a divider that gave up stays at its standard length")
+    expect(
+        state.update(hasSlot: true, isHiding: true, isCovered: false) == .ignore,
+        "a divider that gave up isn't reapplied while hidden"
+    )
+    expect(
+        state.update(hasSlot: true, isHiding: false, isCovered: false) == .measure,
+        "showing the section re-arms a divider that gave up (review #2)"
+    )
+    expect(state.resetCount == 0 && !state.isResetting, "showing clears the reset state")
+}
+
+do {
+    var state = HostedHidingWidth.DividerState()
+    expect(
+        state.update(hasSlot: false, isHiding: true, isCovered: true) == .ignore,
+        "a divider inside the hidden region is neither reset nor measured (review #3)"
+    )
+    expect(state.resetCount == 0, "a covered divider spends no resets")
+}
 
 // MARK: reset limit
 
