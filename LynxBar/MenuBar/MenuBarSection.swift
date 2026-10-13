@@ -56,7 +56,7 @@ final class MenuBarSection {
 
     /// A Boolean value that indicates whether the Lynx Shelf should be used.
     private var useLynxShelf: Bool {
-        appState?.settings.general.useLynxShelf ?? false
+        appState?.settings.general.isLynxShelfActive ?? false
     }
 
     /// A weak reference to the menu bar manager.

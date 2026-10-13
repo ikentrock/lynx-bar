@@ -62,9 +62,19 @@ final class AppState: ObservableObject {
         settings.performSetup(with: self)
         menuBarManager.performSetup(with: self)
 
-        if #available(macOS 26.0, *) {
+        if #available(macOS 27.0, *) {
+            // macOS 27 hosts every item in MenuBarAgent, so the helper's
+            // window-to-app mapping has nothing to work on yet.
+            itemManager.setItemsUnavailable(
+                message: MenuBarItemManager.unsupportedOnMacOS27Message,
+                reason: "macOS 27 hosts menu bar items in MenuBarAgent"
+            )
+        } else if #available(macOS 26.0, *) {
             if let failure = await MenuBarItemService.Connection.shared.start() {
-                itemManager.setHelperFailure(failure)
+                itemManager.setItemsUnavailable(
+                    message: MenuBarItemManager.helperUnavailableMessage,
+                    reason: failure
+                )
             }
         }
 

@@ -14,19 +14,25 @@ final class MenuBarItemManager: ObservableObject {
     /// The current cache of menu bar items.
     @Published private(set) var itemCache = ItemCache(displayID: nil)
 
-    /// Why the `MenuBarItemService` helper can't be used, or `nil` if it can.
+    /// Why menu bar items can't be listed, as a message for the user, or
+    /// `nil` if they can.
     ///
-    /// While this is set, items are neither cached nor moved, since items
-    /// can't be told apart without the helper on macOS 26.
-    @Published private(set) var helperFailureReason: String?
+    /// While this is set, items are neither cached nor moved. It's set when
+    /// the `MenuBarItemService` helper can't be used (items can't be told
+    /// apart without it on macOS 26), and always on macOS 27, where items
+    /// aren't listed yet.
+    @Published private(set) var itemsUnavailableMessage: String?
 
-    /// The message shown in place of menu bar items while ``helperFailureReason`` is set.
+    /// The message shown when the helper couldn't start.
     static let helperUnavailableMessage = "Lynx Bar's helper couldn't start. Build Lynx Bar with a signing certificate (see README)."
 
-    /// Records that the `MenuBarItemService` helper can't be used.
-    func setHelperFailure(_ reason: String) {
-        logger.error("Menu bar item helper unavailable: \(reason, privacy: .public)")
-        helperFailureReason = reason
+    /// The message shown on macOS 27, where items aren't listed yet.
+    static let unsupportedOnMacOS27Message = "Showing menu bar items isn't supported on macOS 27 yet."
+
+    /// Records that menu bar items can't be listed.
+    func setItemsUnavailable(message: String, reason: String) {
+        logger.error("Menu bar items unavailable: \(reason, privacy: .public)")
+        itemsUnavailableMessage = message
         itemCache = ItemCache(displayID: nil)
     }
 
@@ -356,8 +362,8 @@ extension MenuBarItemManager {
     /// the hidden and always-hidden sections are correctly ordered,
     /// arranging them into valid positions if needed.
     func cacheItemsRegardless(_ currentItemWindowIDs: [CGWindowID]? = nil) async {
-        guard helperFailureReason == nil else {
-            logger.debug("Skipping menu bar item cache: helper unavailable")
+        guard itemsUnavailableMessage == nil else {
+            logger.debug("Skipping menu bar item cache: items unavailable")
             return
         }
         await cacheActor.runCacheTask { [weak self] in
