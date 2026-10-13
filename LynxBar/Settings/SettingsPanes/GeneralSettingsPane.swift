@@ -182,8 +182,14 @@ struct GeneralSettingsPane: View {
 
     @ViewBuilder
     private var useLynxShelf: some View {
-        Toggle("Use Lynx Shelf", isOn: $settings.useLynxShelf)
-            .annotation("Show hidden menu bar items in a separate bar below the menu bar.")
+        if #available(macOS 27.0, *) {
+            Toggle("Use Lynx Shelf", isOn: $settings.useLynxShelf)
+                .disabled(true)
+                .annotation(LocalizedStringKey(MenuBarItemManager.unsupportedOnMacOS27Message))
+        } else {
+            Toggle("Use Lynx Shelf", isOn: $settings.useLynxShelf)
+                .annotation("Show hidden menu bar items in a separate bar below the menu bar.")
+        }
     }
 
     @ViewBuilder

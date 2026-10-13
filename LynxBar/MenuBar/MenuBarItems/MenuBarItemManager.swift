@@ -14,24 +14,59 @@ final class MenuBarItemManager: ObservableObject {
     /// The current cache of menu bar items.
     @Published private(set) var itemCache = ItemCache(displayID: nil)
 
-    /// Why the `MenuBarItemService` helper can't be used, or `nil` if it can.
+    /// Why menu bar items can't be listed, as a message for the user, or
+    /// `nil` if they can.
     ///
-    /// While this is set, items are neither cached nor moved, since items
-    /// can't be told apart without the helper on macOS 26.
-    @Published private(set) var helperFailureReason: String?
+    /// While this is set, items are neither cached nor moved. It's set when
+    /// the `MenuBarItemService` helper can't be used (items can't be told
+    /// apart without it on macOS 26), and always on macOS 27, where items
+    /// aren't listed yet.
+    @Published private(set) var itemsUnavailableMessage: String?
 
-    /// The message shown in place of menu bar items while ``helperFailureReason`` is set.
+    /// The message shown when the helper couldn't start.
     static let helperUnavailableMessage = "Lynx Bar's helper couldn't start. Build Lynx Bar with a signing certificate (see README)."
 
-    /// Records that the `MenuBarItemService` helper can't be used.
-    func setHelperFailure(_ reason: String) {
-        logger.error("Menu bar item helper unavailable: \(reason, privacy: .public)")
-        helperFailureReason = reason
+    /// The message shown on macOS 27, where items aren't listed yet.
+    static let unsupportedOnMacOS27Message = "Showing menu bar items isn't supported on macOS 27 yet."
+
+    /// How wide each section divider should be to hide its section on
+    /// macOS 27, keyed by the divider's identifier. A divider that hasn't
+    /// been measured yet is absent. See `updateHostedHidingWidths()`.
+    @Published private(set) var hostedHidingWidths = [ControlItem.Identifier: CGFloat]()
+
+    /// Dividers that the system dropped from the bar on macOS 27. They take
+    /// their standard length until a measurement finds them in the bar again.
+    @Published private(set) var hostedDividersToReset = Set<ControlItem.Identifier>()
+
+    /// The reset state of each divider on macOS 27 (see `updateHostedHidingWidths()`).
+    var hostedDividerStates = [ControlItem.Identifier: HostedHidingWidth.DividerState]()
+
+    /// Requests a hiding-width measurement on macOS 27.
+    let hostedMeasurementRequests = PassthroughSubject<Void, Never>()
+
+    /// Updates ``hostedHidingWidths``.
+    func setHostedHidingWidths(_ widths: [ControlItem.Identifier: CGFloat]) {
+        if widths != hostedHidingWidths {
+            hostedHidingWidths = widths
+        }
+    }
+
+    /// Updates ``hostedDividersToReset``.
+    func setHostedDividersToReset(_ identifiers: Set<ControlItem.Identifier>) {
+        if identifiers != hostedDividersToReset {
+            hostedDividersToReset = identifiers
+        }
+    }
+
+    /// Records that menu bar items can't be listed.
+    func setItemsUnavailable(message: String, reason: String) {
+        logger.error("Menu bar items unavailable: \(reason, privacy: .public)")
+        itemsUnavailableMessage = message
         itemCache = ItemCache(displayID: nil)
     }
 
     /// Logger for the menu bar item manager.
-    private nonisolated let logger = Logger.menuBarItemManager
+    nonisolated let logger = Logger.menuBarItemManager
 
     /// Semaphore to prevent overlapping event operations.
     private nonisolated let eventSemaphore = AsyncSemaphore(value: 1)
@@ -62,11 +97,29 @@ final class MenuBarItemManager: ObservableObject {
         self.appState = appState
         await cacheItemsRegardless()
         configureCancellables(with: appState)
+        requestHostedMeasurement()
     }
 
     /// Configures the internal observers for the manager.
     private func configureCancellables(with appState: AppState) {
         var c = Set<AnyCancellable>()
+
+        if #available(macOS 27.0, *) {
+            // The room for hiding depends on the frontmost app's menu and on
+            // the screen layout (see `updateHostedHidingWidths()`).
+            hostedMeasurementRequests
+                .merge(with: NSWorkspace.shared.notificationCenter
+                    .publisher(for: NSWorkspace.didActivateApplicationNotification)
+                    .map { _ in })
+                .merge(with: NotificationCenter.default
+                    .publisher(for: NSApplication.didChangeScreenParametersNotification)
+                    .map { _ in })
+                .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+                .sink { [weak self] in
+                    self?.updateHostedHidingWidths()
+                }
+                .store(in: &c)
+        }
 
         NSWorkspace.shared.publisher(for: \.runningApplications)
             .delay(for: 0.25, scheduler: DispatchQueue.main)
@@ -356,8 +409,8 @@ extension MenuBarItemManager {
     /// the hidden and always-hidden sections are correctly ordered,
     /// arranging them into valid positions if needed.
     func cacheItemsRegardless(_ currentItemWindowIDs: [CGWindowID]? = nil) async {
-        guard helperFailureReason == nil else {
-            logger.debug("Skipping menu bar item cache: helper unavailable")
+        guard itemsUnavailableMessage == nil else {
+            logger.debug("Skipping menu bar item cache: items unavailable")
             return
         }
         await cacheActor.runCacheTask { [weak self] in

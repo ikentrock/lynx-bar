@@ -382,7 +382,7 @@ extension HIDEventManager {
     private func handlePreventShowOnHover(with event: NSEvent, appState: AppState, screen: NSScreen) {
         guard
             appState.settings.general.showOnHover,
-            !appState.settings.general.useLynxShelf
+            !appState.settings.general.isLynxShelfActive
         else {
             return
         }

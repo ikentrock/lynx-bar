@@ -162,7 +162,7 @@ final class MenuBarManager: ObservableObject {
                 //   * The settings window is visible.
                 guard
                     appState.settings.advanced.hideApplicationMenus,
-                    !appState.settings.general.useLynxShelf,
+                    !appState.settings.general.isLynxShelfActive,
                     !isMenuBarHiddenBySystem,
                     !appState.activeSpace.isFullscreen,
                     !appState.navigationState.isSettingsPresented

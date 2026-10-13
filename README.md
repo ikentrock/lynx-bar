@@ -49,3 +49,6 @@ set again.
 
 Lynx Bar is available under the [GPL-3.0 license](LICENSE). It is based on Ice, © Jordan
 Baird, also GPL-3.0.
+
+macOS 27 hiding is ported from [IceMelt](https://github.com/pnikolaidis/icemelt), another
+GPL-3.0 fork of Ice.

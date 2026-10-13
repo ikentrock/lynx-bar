@@ -3,6 +3,7 @@
 //  LynxBar
 //
 
+import AXSwift
 import Combine
 import SwiftUI
 
@@ -549,14 +550,32 @@ extension NSScreen {
         return menuBarWindow?.bounds.height
     }
 
-    /// Returns the frame of the application menu on this screen.
-    func getApplicationMenuFrame() -> CGRect? {
+    /// Returns the menu bar element of the app that owns the menu bar.
+    private func applicationMenuBar() -> UIElement? {
+        if #available(macOS 27.0, *) {
+            // On macOS 27, the element at the display's origin is MenuBarAgent's
+            // full-width window, so ask the menu bar owner directly.
+            guard
+                let owner = NSWorkspace.shared.menuBarOwningApplication,
+                let app = AXHelpers.application(for: owner)
+            else {
+                return nil
+            }
+            return AXHelpers.menuBar(for: app)
+        }
         let displayBounds = CGDisplayBounds(displayID)
-
         guard
             let menuBar = AXHelpers.element(at: displayBounds.origin),
             AXHelpers.role(for: menuBar) == .menuBar
         else {
+            return nil
+        }
+        return menuBar
+    }
+
+    /// Returns the frame of the application menu on this screen.
+    func getApplicationMenuFrame() -> CGRect? {
+        guard let menuBar = applicationMenuBar() else {
             return nil
         }
 

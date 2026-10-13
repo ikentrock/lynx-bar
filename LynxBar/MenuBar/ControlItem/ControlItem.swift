@@ -142,6 +142,14 @@ final class ControlItem {
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
 
+    /// The width that hides this divider's section on macOS 27, as last
+    /// measured by the item manager (see `MenuBarItemManager.hostedHidingWidths`).
+    private var hostedHidingWidth: CGFloat?
+
+    /// Whether this divider must take its standard length so that it can
+    /// return to the bar on macOS 27.
+    private var needsHostedReset = false
+
     /// The control item's underlying status item.
     private var statusItem: NSStatusItem {
         storage.statusItem
@@ -324,6 +332,28 @@ final class ControlItem {
                     }
                     .store(in: &c)
             }
+
+            if isSectionDivider, #available(macOS 27.0, *) {
+                appState.itemManager.$hostedHidingWidths
+                    .map { [identifier] widths in widths[identifier] }
+                    .removeDuplicates()
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] width in
+                        self?.hostedHidingWidth = width
+                        self?.updateStatusItem()
+                    }
+                    .store(in: &c)
+
+                appState.itemManager.$hostedDividersToReset
+                    .map { [identifier] identifiers in identifiers.contains(identifier) }
+                    .removeDuplicates()
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] needsReset in
+                        self?.needsHostedReset = needsReset
+                        self?.updateStatusItem()
+                    }
+                    .store(in: &c)
+            }
         }
 
         cancellables = c
@@ -401,6 +431,21 @@ final class ControlItem {
         }
     }
 
+    /// Returns the length for the status item in its current state.
+    ///
+    /// On macOS 27 a divider hides its section by filling the measured room
+    /// (see ``HostedHidingWidth``) instead of using `Lengths.expanded`.
+    private func currentLength() -> CGFloat {
+        if #available(macOS 27.0, *), isSectionDivider, state == .hideSection {
+            if needsHostedReset {
+                return Lengths.standard
+            }
+            let screenWidth = (NSScreen.screenWithActiveMenuBar ?? NSScreen.main)?.frame.width ?? 1_000
+            return HostedHidingWidth.length(width: hostedHidingWidth, screenWidth: screenWidth)
+        }
+        return identifier.length(for: state)
+    }
+
     /// Updates the visibility of the status item.
     ///
     /// The hidden and always-hidden control items must always be present in
@@ -416,7 +461,7 @@ final class ControlItem {
 
         if isVisible {
             constraint?.isActive = true
-            statusItem.length = identifier.length(for: state)
+            statusItem.length = currentLength()
         } else {
             let showOnDrag = appState.settings.advanced.showAllSectionsOnUserDrag
             let isDragging = appState.isDraggingMenuBarItem
