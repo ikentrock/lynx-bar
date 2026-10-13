@@ -6,6 +6,7 @@
 - [How do I solve the `Lynx Bar cannot arrange menu bar items in automatically hidden menu bars` error?](#how-do-i-solve-the-lynx-bar-cannot-arrange-menu-bar-items-in-automatically-hidden-menu-bars-error)
 - [Shown items disappear under the app menus](#shown-items-disappear-under-the-app-menus)
 - [Lynx Bar's helper couldn't start](#lynx-bars-helper-couldnt-start)
+- [macOS 27: some hidden items stay visible, or the Shelf says it isn't supported](#macos-27-some-hidden-items-stay-visible-or-the-shelf-says-it-isnt-supported)
 
 ## Items are moved to the always-hidden section
 
@@ -44,3 +45,14 @@ app's menus (or the notch). Turn on **Settings → General → Use Lynx Shelf** 
 
 On macOS 26, Lynx Bar uses a helper to tell menu bar items apart. The app and the helper only trust each other when they're signed with the same
 certificate, so a build without a certificate (ad-hoc) shows this message. See "Build it yourself" in the [README](README.md).
+
+## macOS 27: some hidden items stay visible, or the Shelf says it isn't supported
+
+macOS 27 hides menu bar items only by moving them into its own overflow (the `«` button
+next to the app menus). Lynx Bar hides a section by filling the free space in the bar, but
+macOS drops any item wider than half the screen. When the active app has short menus and
+few items are visible, the first hidden items can stay in the bar. Click `«` to see
+everything that's hidden.
+
+Lynx Bar can't list menu bar items on macOS 27 yet, so the Lynx Shelf, search and the
+Menu Bar Layout pane are turned off there.
