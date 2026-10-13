@@ -56,7 +56,7 @@ final class MenuBarSection {
 
     /// A Boolean value that indicates whether the Lynx Shelf should be used.
     private var useLynxShelf: Bool {
-        appState?.settings.general.useLynxShelf ?? false
+        appState?.settings.general.isLynxShelfActive ?? false
     }
 
     /// A weak reference to the menu bar manager.
@@ -205,6 +205,7 @@ final class MenuBarSection {
         }
 
         startRehideChecks()
+        appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
     }
 
     /// Hides the section.
@@ -226,6 +227,7 @@ final class MenuBarSection {
         }
 
         stopRehideChecks()
+        appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
     }
 
     /// Toggles the visibility of the section.

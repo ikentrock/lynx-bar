@@ -45,4 +45,20 @@ enum AXHelpers {
     static func role(for element: UIElement) -> Role? {
         queue.sync { try? element.role() }
     }
+
+    static func menuBar(for app: Application) -> UIElement? {
+        queue.sync { try? app.attribute(.menuBar) }
+    }
+
+    static func windows(for app: Application) -> [UIElement] {
+        queue.sync { try? app.windows() } ?? []
+    }
+
+    static func description(for element: UIElement) -> String? {
+        queue.sync { try? element.attribute(.description) }
+    }
+
+    static func pid(for element: UIElement) -> pid_t? {
+        queue.sync { try? element.pid() }
+    }
 }
