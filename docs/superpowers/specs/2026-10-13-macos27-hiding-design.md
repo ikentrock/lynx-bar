@@ -41,6 +41,9 @@ with throwaway probe scripts that were not kept:
    item created at 10,000 pt sits at `y=1084` (Accessibility) or
    `y=-33` (its AppKit window). Lynx Bar's real hidden divider was found in that
    state. Setting the length back to a normal value brings it back into the bar.
+   A divider that's merely too wide is also dropped, but its window frame still
+   reports a place in the bar. Either way, it has no slot in `MenuBarAgent`'s
+   Accessibility tree (see Measuring on 27).
 5. **Our own frames are still usable.** The AppKit window frame of our own
    status item matches its position in the bar (probe: window 1531–1567 against
    Accessibility 1538–1560, which includes the agent's padding).
@@ -100,14 +103,27 @@ macOS 27 method that doesn't need the item list:
 - **`regionLeft`.** The right edge of
   `NSScreen.screenWithActiveMenuBar.getApplicationMenuFrame()` (existing helper),
   moved past the notch if `frameOfNotch` is set, plus the agent's 16 pt
-  padding.
-- **`visibleFrom` for a divider in the bar.** The right edge of the divider's own
-  window (`ControlItem.frame`, already published). The divider grows leftwards,
-  so its right edge is the left edge of the items that stay visible.
-- **A divider that isn't in the bar.** Its window frame lies outside the
-  menu bar (finding 4) or it has no window. Set its length to standard, let the
-  next measurement run with the divider back in the bar, then apply the
-  hiding length. Log it once each time.
+  padding. If the app menu can't be read, the screen's horizontal midpoint is
+  used instead. That's a cautious guess that may hide fewer items.
+- **`visibleFrom` for a divider in the bar.** The right edge of the divider's slot
+  in `MenuBarAgent`'s tree. The divider grows leftwards, so its right edge is the
+  left edge of the items that stay visible. This is measured whether the section
+  is shown or hidden, so a width is ready before the next hide. A divider with no
+  slot uses the leftmost item in the bar instead, as IceMelt does.
+- **Finding our own dividers.** `MenuBarAgent`'s Accessibility window has one
+  slot per item, and each slot's child element belongs to the process that
+  created the item. Our slots are the ones with Lynx Bar's process ID. A divider's
+  slot is the one whose x and width match the divider's own window frame.
+- **A divider that isn't in the bar.** A divider that's too wide, or was stretched
+  before it had a place, has **no slot** in `MenuBarAgent`'s tree. Its AppKit
+  window frame still claims a place in the bar, so the frame can't be used to
+  detect this (probe: at 1000 pt the window reported x=684, but the item wasn't
+  drawn and had no slot). When a hidden divider has no slot, set its length to
+  standard, measure again about 600 ms later with the divider back in the bar,
+  then apply the hiding length. After three resets in a row without success, stop
+  and log an error, so the bar can't loop.
+- **Overflowed items.** Hidden items are still listed, piled up against the `«`
+  button. Only slots to the right of `«` count as being in the bar.
 
 `ControlItem` (hidden and always-hidden only) subscribes to its entry in
 `hostedHidingWidths` on 27 and recomputes its length. On 14–26,
@@ -145,10 +161,12 @@ hiding state and doesn't run rehide timers.
 
 ## Known limitations on 27 (round A)
 
-- **Wide displays.** Because of the half-display cap, when the room left of the
-  visible items is wider than half the display, the first hidden items stay in
-  the bar. That happens on very wide screens with few visible items. The
-  1920 pt test display is only affected with very few visible items.
+- **Half-display cap.** When the room between the app menus and the visible
+  items is wider than half the display, the first hidden items stay in the bar.
+  This happens on any display when the active app has short menus and few items
+  are visible. On the 1920 pt test display with Warp in front, about 100 pt of
+  hidden items would stay visible. Closing that gap needs a second spacer item,
+  which IceMelt tried without success. That's left for later.
 - **Always-hidden.** While both sections are hidden, everything is in the same
   overflow. The always-hidden section only gives extra hiding when the hidden
   section is shown.
