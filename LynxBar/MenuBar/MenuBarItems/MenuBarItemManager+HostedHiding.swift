@@ -41,6 +41,8 @@ extension MenuBarItemManager {
         var widths = hostedHidingWidths
         var toReset = hostedDividersToReset
 
+        let hiddenIsHiding = menuBarManager.section(withName: .hidden)?.controlItem.state == .hideSection
+
         for identifier in [ControlItem.Identifier.hidden, .alwaysHidden] {
             guard
                 let section = menuBarManager.section(withName: identifier == .hidden ? .hidden : .alwaysHidden),
@@ -51,42 +53,43 @@ extension MenuBarItemManager {
             }
 
             let slot = HostedHidingWidth.slot(forWindowFrame: windowFrame, in: layout.ownSlots)
-
-            if slot == nil, section.controlItem.state == .hideSection {
-                // Dropped by the system (too wide, or stretched before it had
-                // a place). Take the standard length so it returns, then
-                // measure again. Counts every miss, including one right after
-                // a reset, so a divider that never returns can't loop.
-                let count = hostedResetCounts[identifier, default: 0]
-                guard HostedHidingWidth.shouldReset(resetCount: count) else {
-                    if count == HostedHidingWidth.maxResets {
-                        logger.error("Divider \(identifier.rawValue, privacy: .public) keeps dropping out of the menu bar; giving up")
-                        hostedResetCounts[identifier] = count + 1 // Log once.
-                    }
-                    continue
-                }
-                logger.info("Divider \(identifier.rawValue, privacy: .public) isn't in the menu bar; resetting it")
-                hostedResetCounts[identifier] = count + 1
+            var state = hostedDividerStates[identifier, default: HostedHidingWidth.DividerState()]
+            let action = state.update(
+                hasSlot: slot != nil,
+                isHiding: section.controlItem.state == .hideSection,
+                // The always-hidden divider sits inside the hidden region
+                // while the hidden section is hidden.
+                isCovered: identifier == .alwaysHidden && hiddenIsHiding
+            )
+            hostedDividerStates[identifier] = state
+            if state.isResetting {
                 toReset.insert(identifier)
+            } else {
+                toReset.remove(identifier)
+            }
+
+            switch action {
+            case .ignore:
+                continue
+            case .reset:
+                logger.info("Divider \(identifier.rawValue, privacy: .public) isn't in the menu bar; resetting it")
                 requestHostedMeasurement(after: .milliseconds(600))
                 continue
+            case .giveUp:
+                logger.error("Divider \(identifier.rawValue, privacy: .public) keeps dropping out of the menu bar; giving up until the section is shown")
+                continue
+            case .measureAndVerify:
+                requestHostedMeasurement(after: .milliseconds(600))
+            case .measure:
+                break
             }
 
-            if slot != nil, section.controlItem.state == .hideSection {
-                if toReset.remove(identifier) == nil {
-                    // In the bar at its hiding length, so any loop is over.
-                    hostedResetCounts[identifier] = 0
-                }
-            }
-
-            guard let visibleFrom = HostedHidingWidth.visibleFrom(
-                dividerSlot: slot,
-                otherSlots: layout.otherSlots,
-                chevron: layout.chevron
-            ) else {
+            guard let slot else {
                 continue
             }
-            let width = HostedHidingWidth.width(visibleFrom: visibleFrom, regionLeft: regionLeft)
+            // The divider grows leftwards, so its right edge is where the
+            // items that stay visible begin.
+            let width = HostedHidingWidth.width(visibleFrom: slot.maxX, regionLeft: regionLeft)
             if HostedHidingWidth.shouldApply(old: widths[identifier], new: width) {
                 widths[identifier] = width
             }

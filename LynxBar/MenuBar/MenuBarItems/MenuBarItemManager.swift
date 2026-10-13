@@ -38,8 +38,8 @@ final class MenuBarItemManager: ObservableObject {
     /// their standard length until a measurement finds them in the bar again.
     @Published private(set) var hostedDividersToReset = Set<ControlItem.Identifier>()
 
-    /// Resets in a row per divider, to stop a reflow loop.
-    var hostedResetCounts = [ControlItem.Identifier: Int]()
+    /// The reset state of each divider on macOS 27 (see `updateHostedHidingWidths()`).
+    var hostedDividerStates = [ControlItem.Identifier: HostedHidingWidth.DividerState]()
 
     /// Requests a hiding-width measurement on macOS 27.
     let hostedMeasurementRequests = PassthroughSubject<Void, Never>()
