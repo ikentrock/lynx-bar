@@ -6,7 +6,7 @@ cd "${0:A:h}/.."
 set -o pipefail
 failed=0
 
-ALLOW='"(ShowIceIcon|IceIcon|CustomIceIconIsTemplate|UseIceBar|IceBarLocation|EnableIceBar|Ice Cube)"|Ice\.ControlItem\.|IceSettingsImporter|com\.jordanbaird\.Ice|hasImportedIceSettings|legacyIceCube|jordanbaird/Ice'
+ALLOW='"(ShowIceIcon|IceIcon|CustomIceIconIsTemplate|UseIceBar|IceBarLocation|EnableIceBar|Ice Cube)"|Ice\.ControlItem\.|IceSettingsImporter|com\.jordanbaird\.Ice|hasImportedIceSettings|legacyIceCube|jordanbaird/Ice|IceMelt'
 
 # Code identifiers containing Ice/ice: IceFoo, fooIce, iceFoo.
 hits=$(git grep -nP '\bIce[A-Z]\w*|\b[a-z]\w*Ice\w*|\bice[A-Z]\w*' -- 'LynxBar/*.swift' 'Shared/*.swift' 'MenuBarItemService/*.swift' 'Scripts/*' ':!Scripts/check-names.sh' \
