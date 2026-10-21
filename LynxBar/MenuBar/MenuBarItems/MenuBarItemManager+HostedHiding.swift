@@ -37,6 +37,13 @@ extension MenuBarItemManager {
             return
         }
 
+        // While the system's overflow is open, the divider is squeezed to a
+        // point and its slot no longer matches its window, which would look
+        // like a dropped divider. Measure again once it closes.
+        guard !layout.isOverflowExpanded else {
+            return
+        }
+
         let regionLeft = hostedRegionLeft(on: screen)
         var widths = hostedHidingWidths
         var toReset = hostedDividersToReset

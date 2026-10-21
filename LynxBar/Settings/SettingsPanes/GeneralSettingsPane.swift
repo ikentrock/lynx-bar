@@ -175,7 +175,8 @@ struct GeneralSettingsPane: View {
     @ViewBuilder
     private var lynxShelfOptions: some View {
         useLynxShelf
-        if settings.useLynxShelf {
+        // On macOS 27 the system's overflow has no location to choose.
+        if #unavailable(macOS 27.0), settings.useLynxShelf {
             lynxShelfLocationPicker
         }
     }
@@ -184,8 +185,7 @@ struct GeneralSettingsPane: View {
     private var useLynxShelf: some View {
         if #available(macOS 27.0, *) {
             Toggle("Use Lynx Shelf", isOn: $settings.useLynxShelf)
-                .disabled(true)
-                .annotation(LocalizedStringKey(MenuBarItemManager.unsupportedOnMacOS27Message))
+                .annotation("Show hidden menu bar items in the menu bar, and open the system's « overflow for those that don't fit. A separate bar isn't supported on macOS 27 yet.")
         } else {
             Toggle("Use Lynx Shelf", isOn: $settings.useLynxShelf)
                 .annotation("Show hidden menu bar items in a separate bar below the menu bar.")

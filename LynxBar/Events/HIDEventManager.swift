@@ -24,6 +24,9 @@ final class HIDEventManager: ObservableObject {
     /// History of the manager's enabled states.
     private var enabledStateStack = [Bool]()
 
+    /// The menu bar's item frames on macOS 27, and when they were read.
+    private var hostedItemFrames: (date: Date, frames: [CGRect])?
+
     /// A Boolean value that indicates whether the manager is enabled.
     private var isEnabled = false {
         didSet {
@@ -494,6 +497,10 @@ extension HIDEventManager {
         guard let mouseLocation = MouseHelpers.locationCoreGraphics else {
             return false
         }
+        if #available(macOS 27.0, *) {
+            // Items have no windows of their own on macOS 27.
+            return currentHostedItemFrames(appState: appState).contains { $0.contains(mouseLocation) }
+        }
         let windowIDs = Bridging.getMenuBarWindowList(option: [.onScreen, .activeSpace, .itemsOnly])
         return windowIDs.contains { windowID in
             guard let bounds = Bridging.getWindowBounds(for: windowID) else {
@@ -501,6 +508,29 @@ extension HIDEventManager {
             }
             return bounds.contains(mouseLocation)
         }
+    }
+
+    /// Returns the frames of the menu bar's items on macOS 27, read from
+    /// `MenuBarAgent` at most every 250 ms, since this runs on mouse moves.
+    @available(macOS 27.0, *)
+    private func currentHostedItemFrames(appState: AppState) -> [CGRect] {
+        if let hostedItemFrames, Date.now.timeIntervalSince(hostedItemFrames.date) < 0.25 {
+            return hostedItemFrames.frames
+        }
+        guard let layout = MenuBarAgentLayout.current() else {
+            return []
+        }
+        let dividerWindowFrames = appState.menuBarManager.sections
+            .filter { $0.name != .visible }
+            .compactMap { $0.controlItem.frame }
+        let frames = HostedHidingWidth.itemFrames(
+            ownSlots: layout.ownSlots,
+            otherSlots: layout.otherSlots,
+            chevron: layout.chevron,
+            dividerWindowFrames: dividerWindowFrames
+        )
+        hostedItemFrames = (.now, frames)
+        return frames
     }
 
     /// A Boolean value that indicates whether the mouse pointer is within
