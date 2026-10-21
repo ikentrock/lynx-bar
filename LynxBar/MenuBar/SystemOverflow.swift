@@ -18,9 +18,19 @@ import OSLog
 enum SystemOverflow {
     private static let logger = Logger(category: "SystemOverflow")
 
+    /// The number of open or close requests that haven't finished.
+    private static var pendingCount = 0
+
+    /// The latest open or close request. Each request waits for the one
+    /// before it, then reads the bar again, so two requests never click
+    /// the « at the same time.
+    private static var latestRequest: Task<Bool, Never>?
+
     /// A Boolean value that indicates whether the overflow is being opened
     /// or closed.
-    private(set) static var isChanging = false
+    static var isChanging: Bool {
+        pendingCount > 0
+    }
 
     /// A Boolean value that indicates whether the overflow is open.
     static var isExpanded: Bool {
@@ -32,6 +42,19 @@ enum SystemOverflow {
     /// - Returns: `true` if the overflow is now in the requested state.
     @discardableResult
     static func setExpanded(_ expanded: Bool, hidEventManager: HIDEventManager) async -> Bool {
+        let previous = latestRequest
+        pendingCount += 1
+        let request = Task {
+            _ = await previous?.value
+            return await performSetExpanded(expanded, hidEventManager: hidEventManager)
+        }
+        latestRequest = request
+        let result = await request.value
+        pendingCount -= 1
+        return result
+    }
+
+    private static func performSetExpanded(_ expanded: Bool, hidEventManager: HIDEventManager) async -> Bool {
         guard let layout = MenuBarAgentLayout.current() else {
             logger.error("Can't read MenuBarAgent's layout")
             return false
@@ -43,14 +66,12 @@ enum SystemOverflow {
             // Nothing is overflowed, so there's nothing to open.
             return !expanded
         }
-        isChanging = true
-        defer {
-            isChanging = false
-        }
         // The Lynx icon acts on mouse down, so the user's button may still
         // be pressed. A click posted before it's released is lost.
-        for _ in 0..<40 where MouseHelpers.isButtonPressed() {
+        var waits = 0
+        while MouseHelpers.isButtonPressed(), waits < 40 {
             try? await Task.sleep(for: .milliseconds(25))
+            waits += 1
         }
         await click(at: HostedOverflow.clickPoint(chevron: chevron), hidEventManager: hidEventManager)
         let isExpanded = isExpanded
