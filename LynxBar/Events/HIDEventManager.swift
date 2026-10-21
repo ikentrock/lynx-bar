@@ -357,7 +357,7 @@ extension HIDEventManager {
                 guard isMouseInsideEmptyMenuBarSpace(appState: appState, screen: screen) else {
                     return
                 }
-                hiddenSection.show()
+                hiddenSection.show(opensSystemOverflow: false)
             }
         } else {
             guard
@@ -435,7 +435,7 @@ extension HIDEventManager {
         let averageDelta = (event.scrollingDeltaX + event.scrollingDeltaY) / 2
 
         if averageDelta > 5 {
-            hiddenSection.show()
+            hiddenSection.show(opensSystemOverflow: false)
         } else if averageDelta < -5 {
             hiddenSection.hide()
         }
