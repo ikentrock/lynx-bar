@@ -156,7 +156,12 @@ final class MenuBarSection {
     }
 
     /// Shows the section.
-    func show() {
+    ///
+    /// - Parameter opensSystemOverflow: Whether to also open the system's
+    ///   overflow on macOS 27, when it stands in for the Lynx Shelf. Opening
+    ///   it clicks the « and briefly moves the pointer, so passive triggers
+    ///   such as hovering pass `false`.
+    func show(opensSystemOverflow: Bool = true) {
         guard let menuBarManager, isHidden else {
             return
         }
@@ -213,7 +218,7 @@ final class MenuBarSection {
         startRehideChecks()
         appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
 
-        if usesSystemOverflow {
+        if usesSystemOverflow, opensSystemOverflow {
             Task {
                 await openSystemOverflow()
             }
