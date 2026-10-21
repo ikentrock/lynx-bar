@@ -227,11 +227,14 @@ final class MenuBarSection {
         }
 
         // Close the system's overflow before the divider grows: the reflow
-        // would move the « away from the click.
-        if #available(macOS 27.0, *), usesSystemOverflow, let appState, SystemOverflow.isExpanded {
-            guard !SystemOverflow.isChanging else {
-                return
-            }
+        // would move the « away from the click. Requests are queued, so this
+        // also waits for an open that's still in progress.
+        if
+            #available(macOS 27.0, *),
+            usesSystemOverflow,
+            let appState,
+            SystemOverflow.isChanging || SystemOverflow.isExpanded
+        {
             Task {
                 await SystemOverflow.setExpanded(false, hidEventManager: appState.hidEventManager)
                 hideInMenuBar()
