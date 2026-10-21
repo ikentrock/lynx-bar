@@ -33,6 +33,9 @@ run IceSettingsImporter
 build HostedHidingWidth ../LynxBar/MenuBar/ControlItem/HostedHidingWidth.swift
 run HostedHidingWidth
 
+build HostedOverflow ../LynxBar/MenuBar/ControlItem/HostedOverflow.swift
+run HostedOverflow
+
 ../Scripts/check-names.sh || failed=1
 
 exit $failed

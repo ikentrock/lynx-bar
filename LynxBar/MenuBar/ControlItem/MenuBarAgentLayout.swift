@@ -12,14 +12,15 @@ import Cocoa
 /// The agent's Accessibility window has one slot per item. A slot's child
 /// element belongs to the process that created the item, which is how Lynx
 /// Bar finds its own control items. An item the system dropped (for example,
-/// a divider that is too wide) has no slot.
+/// a divider that is too wide) has no slot. The system's overflow button
+/// (`«`) is the one slot without a child element.
 @available(macOS 27.0, *)
 struct MenuBarAgentLayout {
     /// The bundle identifier of the process that hosts the menu bar.
     static let agentBundleIdentifier = "com.apple.MenuBarAgent"
 
-    /// The Accessibility description of the system's overflow button.
-    static let chevronDescription = "Show Hidden Menu Bar Items"
+    /// How long to wait for the agent to answer an Accessibility request.
+    static let messagingTimeout: Float = 1
 
     /// Frames of the slots that belong to Lynx Bar's own status items.
     var ownSlots = [CGRect]()
@@ -30,6 +31,11 @@ struct MenuBarAgentLayout {
     /// The frame of the overflow button, if it's shown.
     var chevron: CGRect?
 
+    /// A Boolean value that indicates whether the system's overflow is open.
+    var isOverflowExpanded: Bool {
+        HostedOverflow.isExpanded(chevron: chevron, ownSlots: ownSlots, otherSlots: otherSlots)
+    }
+
     /// Reads the current layout, or returns `nil` if the agent can't be read.
     static func current() -> MenuBarAgentLayout? {
         guard
@@ -38,6 +44,7 @@ struct MenuBarAgentLayout {
         else {
             return nil
         }
+        app.messagingTimeout = messagingTimeout
         let ownPID = ProcessInfo.processInfo.processIdentifier
         var layout = MenuBarAgentLayout()
         for window in AXHelpers.windows(for: app) {
@@ -45,10 +52,13 @@ struct MenuBarAgentLayout {
                 guard let frame = AXHelpers.frame(for: slot) else {
                     continue
                 }
-                let element = AXHelpers.children(for: slot).first ?? slot
-                if AXHelpers.description(for: element) == chevronDescription {
+                // Only the agent's own elements are asked anything, so an item
+                // whose app hangs can't stall the read.
+                guard let element = AXHelpers.children(for: slot).first else {
                     layout.chevron = frame
-                } else if AXHelpers.pid(for: element) == ownPID {
+                    continue
+                }
+                if AXHelpers.pid(for: element) == ownPID {
                     layout.ownSlots.append(frame)
                 } else {
                     layout.otherSlots.append(frame)

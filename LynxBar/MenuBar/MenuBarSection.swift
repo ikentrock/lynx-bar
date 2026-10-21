@@ -59,6 +59,12 @@ final class MenuBarSection {
         appState?.settings.general.isLynxShelfActive ?? false
     }
 
+    /// A Boolean value that indicates whether showing the section also opens
+    /// the system's overflow (`«`), in place of the Lynx Shelf on macOS 27.
+    private var usesSystemOverflow: Bool {
+        appState?.settings.general.showsSystemOverflow ?? false
+    }
+
     /// A weak reference to the menu bar manager.
     private weak var menuBarManager: MenuBarManager? {
         appState?.menuBarManager
@@ -206,10 +212,38 @@ final class MenuBarSection {
 
         startRehideChecks()
         appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
+
+        if usesSystemOverflow {
+            Task {
+                await openSystemOverflow()
+            }
+        }
     }
 
     /// Hides the section.
     func hide() {
+        guard !isHidden else {
+            return
+        }
+
+        // Close the system's overflow before the divider grows: the reflow
+        // would move the « away from the click.
+        if #available(macOS 27.0, *), usesSystemOverflow, let appState, SystemOverflow.isExpanded {
+            guard !SystemOverflow.isChanging else {
+                return
+            }
+            Task {
+                await SystemOverflow.setExpanded(false, hidEventManager: appState.hidEventManager)
+                hideInMenuBar()
+            }
+            return
+        }
+
+        hideInMenuBar()
+    }
+
+    /// Hides the section in the menu bar.
+    private func hideInMenuBar() {
         guard let menuBarManager, !isHidden else {
             return
         }
@@ -233,6 +267,20 @@ final class MenuBarSection {
     /// Toggles the visibility of the section.
     func toggle() {
         if isHidden { show() } else { hide() }
+    }
+
+    /// Opens the system's overflow once the shown section has settled in the
+    /// bar, if any items still don't fit.
+    private func openSystemOverflow() async {
+        guard #available(macOS 27.0, *), let appState else {
+            return
+        }
+        // Showing the section shrinks its divider, and the bar reflows.
+        try? await Task.sleep(for: .milliseconds(500))
+        guard !isHidden else {
+            return
+        }
+        await SystemOverflow.setExpanded(true, hidEventManager: appState.hidEventManager)
     }
 
     /// Starts running checks to determine when to rehide the section.
