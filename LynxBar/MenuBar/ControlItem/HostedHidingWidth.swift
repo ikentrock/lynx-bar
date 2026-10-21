@@ -68,6 +68,20 @@ enum HostedHidingWidth {
         }
     }
 
+    /// Returns the frames of the menu bar's items, for telling items apart
+    /// from empty space. A divider fills the empty space with its slot, so
+    /// slots that match a divider's window are left out.
+    static func itemFrames(
+        ownSlots: [CGRect],
+        otherSlots: [CGRect],
+        chevron: CGRect?,
+        dividerWindowFrames: [CGRect]
+    ) -> [CGRect] {
+        let dividerSlots = dividerWindowFrames.compactMap { slot(forWindowFrame: $0, in: ownSlots) }
+        let items = ownSlots.filter { !dividerSlots.contains($0) } + otherSlots
+        return chevron.map { items + [$0] } ?? items
+    }
+
     /// Returns whether a dropped divider may be reset again after
     /// `resetCount` resets in a row.
     static func shouldReset(resetCount: Int) -> Bool {

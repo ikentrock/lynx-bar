@@ -146,4 +146,28 @@ expect(HostedHidingWidth.shouldReset(resetCount: 0), "the first reset is allowed
 expect(HostedHidingWidth.shouldReset(resetCount: 2), "the third reset is allowed")
 expect(!HostedHidingWidth.shouldReset(resetCount: 3), "a fourth reset in a row is refused")
 
+// MARK: itemFrames
+
+do {
+    let divider = CGRect(x: 872, y: 0, width: 273, height: 24)
+    let lynxIcon = CGRect(x: 1185, y: 0, width: 33, height: 24)
+    let chevron = CGRect(x: 1128, y: 0, width: 18, height: 24)
+    let siri = CGRect(x: 1294, y: 0, width: 32, height: 24)
+    let dividerWindow = CGRect(x: 873, y: -33, width: 272, height: 24)
+    let frames = HostedHidingWidth.itemFrames(
+        ownSlots: [divider, lynxIcon],
+        otherSlots: [siri],
+        chevron: chevron,
+        dividerWindowFrames: [dividerWindow]
+    )
+    expect(frames.contains(lynxIcon), "the Lynx icon counts as an item")
+    expect(frames.contains(siri), "other apps' items count as items")
+    expect(frames.contains(chevron), "the « counts as an item")
+    expect(!frames.contains(divider), "a divider's slot is empty space, not an item")
+    expect(
+        HostedHidingWidth.itemFrames(ownSlots: [divider], otherSlots: [], chevron: nil, dividerWindowFrames: []) == [divider],
+        "an own slot that matches no divider counts as an item"
+    )
+}
+
 finishTests("HostedHidingWidth")

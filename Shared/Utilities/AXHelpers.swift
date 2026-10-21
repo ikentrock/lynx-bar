@@ -54,10 +54,6 @@ enum AXHelpers {
         queue.sync { try? app.windows() } ?? []
     }
 
-    static func description(for element: UIElement) -> String? {
-        queue.sync { try? element.attribute(.description) }
-    }
-
     static func pid(for element: UIElement) -> pid_t? {
         queue.sync { try? element.pid() }
     }
