@@ -16,7 +16,8 @@ import Cocoa
 /// (`«`) is the one slot without a child element.
 ///
 /// From macOS 27.2 the agent has a second window that lists every item side
-/// by side, hidden or not. Only the window that holds the `«` is read then.
+/// by side, hidden or not. The slots come from the window that holds the `«`,
+/// and `listItems` from the other one.
 @available(macOS 27.0, *)
 struct MenuBarAgentLayout {
     /// The bundle identifier of the process that hosts the menu bar.
@@ -40,6 +41,9 @@ struct MenuBarAgentLayout {
     /// The overflow button's identifier, which names its state from macOS
     /// 27.2 on.
     var chevronIdentifier: String?
+
+    /// Every item of the agent's item-list window, left to right.
+    var listItems = [HostedItem]()
 
     /// A Boolean value that indicates whether the system's overflow is open.
     var isOverflowExpanded: Bool {
@@ -90,6 +94,22 @@ struct MenuBarAgentLayout {
                 layout.chevronElement = element
                 layout.chevronIdentifier = identifier
             }
+        }
+
+        let listIndex = windows.indices.first { $0 != liveIndex }
+        if let listIndex {
+            layout.listItems = windows[listIndex].compactMap { slot in
+                guard case let .item(frame, element) = slot else {
+                    return nil
+                }
+                let pid = AXHelpers.pid(for: element)
+                return HostedItem(
+                    bundleIdentifier: pid.flatMap { NSRunningApplication(processIdentifier: $0)?.bundleIdentifier },
+                    frame: frame,
+                    isOwn: pid == ownPID
+                )
+            }
+            .sorted { $0.frame.minX < $1.frame.minX }
         }
         return layout
     }
