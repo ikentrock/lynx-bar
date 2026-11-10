@@ -6,7 +6,7 @@
 - [How do I solve the `Lynx Bar cannot arrange menu bar items in automatically hidden menu bars` error?](#how-do-i-solve-the-lynx-bar-cannot-arrange-menu-bar-items-in-automatically-hidden-menu-bars-error)
 - [Shown items disappear under the app menus](#shown-items-disappear-under-the-app-menus)
 - [Lynx Bar's helper couldn't start](#lynx-bars-helper-couldnt-start)
-- [macOS 27: macOS decides which items are hidden](#macos-27-macos-decides-which-items-are-hidden)
+- [macOS 27: hiding items](#macos-27-hiding-items)
 
 ## Items are moved to the always-hidden section
 
@@ -46,22 +46,18 @@ app's menus (or the notch). Turn on **Settings → General → Use Lynx Shelf** 
 On macOS 26, Lynx Bar uses a helper to tell menu bar items apart. The app and the helper only trust each other when they're signed with the same
 certificate, so a build without a certificate (ad-hoc) shows this message. See "Build it yourself" in the [README](README.md).
 
-## macOS 27: macOS decides which items are hidden
+## macOS 27: hiding items
 
-macOS 27 hides menu bar items only by moving them into its own overflow (the `«` button
-next to the app menus), and only when they don't fit. Apps can't hide other apps' items,
-so on macOS 27 Lynx Bar leaves that to macOS: every item shows while there's room, and the
-rest go into the `«`. Lynx Bar's dividers keep their normal size there.
+macOS 27 draws every menu bar item in one window and has no official way to hide other apps' items. Lynx Bar hides them through a private facility of the system's menu bar agent (an allowlist of the apps that may show), so hiding works, with the limits below.
 
-With "Use Lynx Shelf" on, showing the hidden section (the Lynx icon, a click or a scroll in
-the menu bar) opens the `«`, and hiding it closes it. From macOS 27.2 Lynx Bar presses the
-`«` directly; on earlier versions of macOS 27 it clicks it, so the pointer jumps there for a
-moment and comes back. From macOS 27.2 the system also opens the `«` by itself when the
-pointer rests on it.
+- **Choosing what's hidden.** While the section is shown, ⌘-drag apps to the left of the "|" divider. Hiding works per app: an app with several icons hides as a whole.
+- **Revealing.** Hover over the Lynx icon (with "Show on hover" on) or click it. Hidden apps reappear in place. Rehiding waits while a menu is open, and any app's window at the pop-up-menu level holds it too while it's open.
+- **Lynx Bar must run from `/Applications`.** Otherwise Settings shows "Move Lynx Bar to the Applications folder to hide items on macOS 27." and Lynx Bar falls back to letting macOS decide what hides (the `«` button next to the app menus). Apps outside `/Applications`, or without a bundle ID, may stay hidden while a section is hidden.
+- **Now Playing and Focus.** Apple's Now Playing and Focus icons also hide while a section is hidden. That's a macOS limitation.
+- **Other menu bar managers.** Don't run another manager that uses the same facility (Hidden Bar, Stash) at the same time.
+- **Recovery.** Quitting Lynx Bar brings every icon back.
+- **Fallback.** If macOS removes the facility, Lynx Bar falls back to letting macOS decide: every item shows while there's room, and the rest go into the `«`. With "Use Lynx Shelf" on, showing the hidden section then also opens the `«`.
 
-Lynx Bar can't list menu bar items on macOS 27 yet, so search and the Menu Bar Layout pane
-are turned off there, the Lynx Shelf can't show its own bar, and "Show on hover" isn't
-available.
+Lynx Bar can't list menu bar items on macOS 27 yet, so search and the Menu Bar Layout pane are turned off there and the Lynx Shelf can't show its own bar. "Show on hover" works from the Lynx icon only.
 
-If the Lynx icon ends up inside the `«`, open the `«` and ⌘-drag the Lynx icon out to the
-right.
+If the Lynx icon ends up inside the `«`, open the `«` and ⌘-drag the Lynx icon out to the right.
