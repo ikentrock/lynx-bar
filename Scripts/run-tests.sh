@@ -36,6 +36,9 @@ run HostedHidingWidth
 build HostedOverflow ../LynxBar/MenuBar/ControlItem/HostedOverflow.swift
 run HostedOverflow
 
+build HostedSections ../LynxBar/MenuBar/ControlItem/HostedSections.swift ../LynxBar/MenuBar/ControlItem/HostedHidingWidth.swift
+run HostedSections
+
 ../Scripts/check-names.sh || failed=1
 
 exit $failed
