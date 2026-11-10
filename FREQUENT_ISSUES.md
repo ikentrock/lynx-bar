@@ -50,14 +50,15 @@ certificate, so a build without a certificate (ad-hoc) shows this message. See "
 
 macOS 27 draws every menu bar item in one window and has no official way to hide other apps' items. Lynx Bar hides them through a private facility of the system's menu bar agent (an allowlist of the apps that may show), so hiding works, with the limits below.
 
-- **Choosing what's hidden.** While the section is shown, ⌘-drag apps to the left of the "|" divider. Hiding works per app: an app with several icons hides as a whole.
-- **Revealing.** Hover over the Lynx icon (with "Show on hover" on) or click it. Hidden apps reappear in place. Rehiding waits while a menu is open, and any app's window at the pop-up-menu level holds it too while it's open.
+- **Choosing what's hidden.** While the section is shown, ⌘-drag apps to the left of the "|" divider. To unhide an app, ⌘-drag it to the right of the "|" while the section is shown. Removing it from the list some other way is undone at the next hide, which reads the list from where the icons sit. Hiding works per app: an app with several icons hides as a whole.
+- **Revealing.** Hover over the Lynx icon (with "Show on hover" on) or click it. Hidden apps reappear in place. Rehiding waits while one of the revealed apps has a window open: a menu, popover or panel (a cloud-storage app's panel, for example). Other apps' windows don't hold it. Clicking the Lynx icon right after a hover-reveal hides the section again, since the click toggles it.
 - **Lynx Bar must run from `/Applications`.** Otherwise Settings shows "Move Lynx Bar to the Applications folder to hide items on macOS 27." and Lynx Bar falls back to letting macOS decide what hides (the `«` button next to the app menus). Apps outside `/Applications`, or without a bundle ID, may stay hidden while a section is hidden.
 - **Now Playing and Focus.** Apple's Now Playing and Focus icons also hide while a section is hidden. That's a macOS limitation.
 - **Other menu bar managers.** Don't run another manager that uses the same facility (Hidden Bar, Stash) at the same time.
 - **Recovery.** Quitting Lynx Bar brings every icon back.
-- **Fallback.** If macOS removes the facility, Lynx Bar falls back to letting macOS decide: every item shows while there's room, and the rest go into the `«`. With "Use Lynx Shelf" on, showing the hidden section then also opens the `«`.
+- **Fallback.** If macOS removes the facility (or Lynx Bar doesn't run from `/Applications`), Lynx Bar falls back to letting macOS decide: every item shows while there's room, and the rest go into the `«`. "Show on hover" is off entirely in the fallback.
+- **Lynx Shelf.** With "Use Lynx Shelf" on, showing the hidden section also opens the `«` for items that don't fit, with or without the facility.
 
-Lynx Bar can't list menu bar items on macOS 27 yet, so search and the Menu Bar Layout pane are turned off there and the Lynx Shelf can't show its own bar. "Show on hover" works from the Lynx icon only.
+Lynx Bar can't list menu bar items on macOS 27 yet, so search and the Menu Bar Layout pane are turned off there and the Lynx Shelf can't show its own bar. "Show on hover" works from the Lynx icon only, and only while hiding through the facility works.
 
 If the Lynx icon ends up inside the `«`, open the `«` and ⌘-drag the Lynx icon out to the right.
