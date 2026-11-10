@@ -62,8 +62,11 @@ final class HostedVisibilityManager {
     /// `didLaunchApplicationNotification` doesn't report.
     private var runningAppsObservation: NSKeyValueObservation?
 
-    /// The bundle identifiers of the running apps, as last seen.
-    private var runningBundleIdentifiers: Set<String>
+    /// The running apps that have a bundle identifier, by process
+    /// identifier, as last seen. Compared by process, so an app (such as
+    /// MenuBarAgent) that quits and relaunches between two looks still
+    /// counts as added.
+    private var runningApps: [pid_t: String]
 
     /// Whether a reapply for new running apps is already scheduled for the
     /// next run-loop turn.
@@ -89,7 +92,7 @@ final class HostedVisibilityManager {
             Self.logger.debug("Loaded the hidden apps: \(Self.describe(self.sets), privacy: .public)")
         }
 
-        self.runningBundleIdentifiers = Self.bundleIdentifiers(of: NSWorkspace.shared.runningApplications)
+        self.runningApps = Self.bundleIdentifiersByPID(of: NSWorkspace.shared.runningApplications)
 
         let center = NSWorkspace.shared.notificationCenter
         observers.append(
@@ -153,9 +156,9 @@ final class HostedVisibilityManager {
     /// the running apps. That includes MenuBarAgent relaunching, which drops
     /// the assertion.
     private func runningAppsDidChange() {
-        let current = Self.bundleIdentifiers(of: NSWorkspace.shared.runningApplications)
-        let added = current.subtracting(runningBundleIdentifiers)
-        runningBundleIdentifiers = current
+        let current = Self.bundleIdentifiersByPID(of: NSWorkspace.shared.runningApplications)
+        let added = Set(current.compactMap { pid, id in runningApps[pid] == nil ? id : nil })
+        runningApps = current
         guard !added.isEmpty, !isStopped, !isRunningAppsReapplyScheduled else {
             return
         }
@@ -179,6 +182,16 @@ final class HostedVisibilityManager {
 
     private static func bundleIdentifiers(of apps: [NSRunningApplication]) -> Set<String> {
         Set(apps.compactMap(\.bundleIdentifier))
+    }
+
+    private static func bundleIdentifiersByPID(of apps: [NSRunningApplication]) -> [pid_t: String] {
+        var result = [pid_t: String]()
+        for app in apps {
+            if let id = app.bundleIdentifier {
+                result[app.processIdentifier] = id
+            }
+        }
+        return result
     }
 
     private func enqueue() {
