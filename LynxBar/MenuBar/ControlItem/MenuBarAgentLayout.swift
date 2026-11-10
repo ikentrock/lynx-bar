@@ -16,8 +16,11 @@ import Cocoa
 /// (`«`) is the one slot without a child element.
 ///
 /// From macOS 27.2 the agent has a second window that lists every item side
-/// by side, hidden or not. The slots come from the window that holds the `«`,
-/// and `listItems` from the other one.
+/// by side. The slots come from the window that holds the `«`, or from both
+/// windows when there's no `«`. `listItems` comes from the item-list window:
+/// the one without the `«`, or, with no `«`, the one whose own slots match
+/// the most of our item windows. Under an allowlist assertion, hidden apps
+/// are absent from both windows.
 @available(macOS 27.0, *)
 struct MenuBarAgentLayout {
     /// The bundle identifier of the process that hosts the menu bar.
@@ -26,7 +29,9 @@ struct MenuBarAgentLayout {
     /// How long to wait for the agent to answer an Accessibility request.
     static let messagingTimeout: Float = 1
 
-    /// Frames of the slots that belong to Lynx Bar's own status items.
+    /// Frames of the slots that belong to Lynx Bar's own status items, read
+    /// from the live window (the one holding the `«`), or from both windows
+    /// when there's no `«`.
     var ownSlots = [CGRect]()
 
     /// Frames of every other item's slot.
