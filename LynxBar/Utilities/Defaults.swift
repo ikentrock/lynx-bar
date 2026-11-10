@@ -174,6 +174,10 @@ extension Defaults {
         case hasMigrated0_11_13 = "hasMigrated0_11_13"
         case hasMigrated0_11_13_1 = "hasMigrated0_11_13_1"
 
+        // MARK: Hosted Hiding (macOS 27)
+        case hostedHiddenApps = "HostedHiddenApps"
+        case hostedAlwaysHiddenApps = "HostedAlwaysHiddenApps"
+
         // MARK: Deprecated (Appearance Settings)
         case menuBarHasBorder = "MenuBarHasBorder"
         case menuBarBorderColor = "MenuBarBorderColor"

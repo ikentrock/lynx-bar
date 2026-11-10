@@ -332,6 +332,8 @@ extension HIDEventManager {
             for section in appState.menuBarManager.sections {
                 section.controlItem.state = .showSection
             }
+            // On macOS 27, also draw the hidden apps' icons, so they can be dragged.
+            appState.menuBarManager.hostedSectionsDidChange()
         }
     }
 
