@@ -285,23 +285,11 @@ final class HostedVisibilityManager {
         let matched = sections.map { section in
             section.controlItem.frame.flatMap { HostedHidingWidth.slot(forWindowFrame: $0, in: ownFrames) }
         }
-        var frames = [MenuBarSection.Name: CGRect]()
-        if
-            matched.allSatisfy({ $0 != nil }),
-            Set(matched.compactMap { $0.map { "\($0)" } }).count == matched.count
-        {
-            frames = Dictionary(uniqueKeysWithValues: zip(sections.map(\.name), matched.compactMap { $0 }))
-            logMatch("by frame", layout: layout)
-        } else {
-            guard
-                ownFrames.count == sections.count,
-                zip(matched, ownFrames).allSatisfy({ match, frame in match.map { $0 == frame } ?? true })
-            else {
-                return nil
-            }
-            frames = Dictionary(uniqueKeysWithValues: zip(sections.map(\.name), ownFrames))
-            logMatch("by order", layout: layout)
+        guard let result = HostedSections.ownItemSlots(matched: matched, ownSlots: ownFrames) else {
+            return nil
         }
+        logMatch(result.match == .byFrame ? "by frame" : "by order", layout: layout)
+        let frames = Dictionary(uniqueKeysWithValues: zip(sections.map(\.name), result.slots))
         return (frames[.hidden], frames[.alwaysHidden])
     }
 
