@@ -41,8 +41,10 @@ final class HostedVisibilityManager {
     /// Whether the first read already waited for the dividers once.
     private var hasWaitedForFirstRead = false
 
-    /// The state of the last allowlist applied or cleared.
-    private var applied = AppliedState(hidesHidden: false, hidesAlwaysHidden: false)
+    /// The state of the last allowlist applied or cleared, `nil` until the
+    /// first one. The launch apply doesn't re-read the bar: the stored sets
+    /// are kept as they are.
+    private var applied: AppliedState?
 
     /// The last queued job. Every new job waits for it.
     private var tail: Task<Void, Never>?
@@ -133,11 +135,12 @@ final class HostedVisibilityManager {
         if needsFirstRead {
             await readFirstSets()
         } else if
+            let applied,
             (state.hidesHidden && !applied.hidesHidden) ||
             (state.hidesAlwaysHidden && !applied.hidesAlwaysHidden)
         {
             // Everything is drawn right before a section hides.
-            readSets(from: MenuBarAgentLayout.current())
+            readSets(from: currentLayout())
         }
 
         var excluded = Set<String>()
@@ -148,7 +151,7 @@ final class HostedVisibilityManager {
             excluded.formUnion(sets.alwaysHidden)
         }
         guard !excluded.isEmpty else {
-            if applied.hidesAny {
+            if applied?.hidesAny ?? false {
                 Self.logger.debug("Nothing to hide: clearing the allowlist")
                 allowlist.clear()
             }
@@ -156,7 +159,11 @@ final class HostedVisibilityManager {
             return
         }
 
-        let layout = MenuBarAgentLayout.current()
+        let layout = currentLayout()
+        if let layout {
+            // Only logs how our items match in the list, for diagnosis.
+            _ = dividerFrames(in: layout)
+        }
         var candidates = Set(layout?.listItems.compactMap(\.bundleIdentifier) ?? [])
         for app in NSWorkspace.shared.runningApplications where app.activationPolicy != .prohibited {
             if let id = app.bundleIdentifier {
@@ -193,14 +200,14 @@ final class HostedVisibilityManager {
     /// first try waits for them.
     private func readFirstSets() async {
         guard !hasWaitedForFirstRead else {
-            needsFirstRead = !readSets(from: MenuBarAgentLayout.current())
+            needsFirstRead = !readSets(from: currentLayout())
             return
         }
         hasWaitedForFirstRead = true
         let deadline = ContinuousClock.now + Self.firstReadTimeout
         while true {
             let isLastTry = ContinuousClock.now >= deadline
-            if readSets(from: MenuBarAgentLayout.current(), logsFailure: isLastTry) {
+            if readSets(from: currentLayout(), logsFailure: isLastTry) {
                 needsFirstRead = false
                 return
             }
@@ -244,27 +251,63 @@ final class HostedVisibilityManager {
         return true
     }
 
+    /// The sections whose control items are in the bar, in the order their
+    /// items sit left to right when the owner hasn't moved them.
+    private func sectionsInBar() -> [MenuBarSection] {
+        guard let menuBarManager = appState?.menuBarManager else {
+            return []
+        }
+        return [MenuBarSection.Name.alwaysHidden, .hidden, .visible].compactMap { name in
+            menuBarManager.section(withName: name).flatMap { $0.controlItem.isAddedToMenuBar ? $0 : nil }
+        }
+    }
+
+    /// Reads the agent's layout, choosing its item-list window by our own
+    /// status item windows.
+    private func currentLayout() -> MenuBarAgentLayout? {
+        MenuBarAgentLayout.current(ownWindowFrames: sectionsInBar().compactMap(\.controlItem.frame))
+    }
+
     /// The dividers' frames in the item list, `nil` for a disabled section,
     /// or `nil` overall if they can't be found.
     ///
-    /// They're matched by order, not by their windows' frames: our status
-    /// item windows can follow the agent's other window, where a divider has
-    /// another width. Our items sit always-hidden divider, hidden divider,
-    /// Lynx icon, left to right, so the list must hold exactly one item of
-    /// ours per section in the bar.
+    /// Each of our windows is matched to its own item in the list by
+    /// ``HostedHidingWidth/slot(forWindowFrame:in:)``. If some don't match,
+    /// our items are matched by their usual order instead (always-hidden
+    /// divider, hidden divider, Lynx icon), but only if that order agrees
+    /// with every item that did match. The owner may have moved them.
     private func dividerFrames(in layout: MenuBarAgentLayout) -> (hidden: CGRect?, alwaysHidden: CGRect?)? {
-        guard let menuBarManager = appState?.menuBarManager else {
-            return nil
-        }
-        let names = [MenuBarSection.Name.alwaysHidden, .hidden, .visible].filter {
-            menuBarManager.controlItem(withName: $0)?.isAddedToMenuBar ?? false
-        }
+        let sections = sectionsInBar()
         let ownFrames = layout.listItems.filter(\.isOwn).map(\.frame)
-        guard !ownFrames.isEmpty, ownFrames.count == names.count else {
+        guard !sections.isEmpty, !ownFrames.isEmpty else {
             return nil
         }
-        let frames = Dictionary(uniqueKeysWithValues: zip(names, ownFrames))
+        let matched = sections.map { section in
+            section.controlItem.frame.flatMap { HostedHidingWidth.slot(forWindowFrame: $0, in: ownFrames) }
+        }
+        var frames = [MenuBarSection.Name: CGRect]()
+        if
+            matched.allSatisfy({ $0 != nil }),
+            Set(matched.compactMap { $0.map { "\($0)" } }).count == matched.count
+        {
+            frames = Dictionary(uniqueKeysWithValues: zip(sections.map(\.name), matched.compactMap { $0 }))
+            logMatch("by frame", layout: layout)
+        } else {
+            guard
+                ownFrames.count == sections.count,
+                zip(matched, ownFrames).allSatisfy({ match, frame in match.map { $0 == frame } ?? true })
+            else {
+                return nil
+            }
+            frames = Dictionary(uniqueKeysWithValues: zip(sections.map(\.name), ownFrames))
+            logMatch("by order", layout: layout)
+        }
         return (frames[.hidden], frames[.alwaysHidden])
+    }
+
+    private func logMatch(_ how: String, layout: MenuBarAgentLayout) {
+        let window = layout.listWindowChoice.map { "window \($0.index) (\($0.reason))" } ?? "no window"
+        Self.logger.debug("Matched our items \(how, privacy: .public) in the list, \(window, privacy: .public)")
     }
 
     /// Stops using the allowlist for the rest of the session.

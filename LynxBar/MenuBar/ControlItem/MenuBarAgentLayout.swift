@@ -45,6 +45,10 @@ struct MenuBarAgentLayout {
     /// Every item of the agent's item-list window, left to right.
     var listItems = [HostedItem]()
 
+    /// The index of the agent window `listItems` was read from, and how it
+    /// was chosen, for logging.
+    var listWindowChoice: (index: Int, reason: String)?
+
     /// A Boolean value that indicates whether the system's overflow is open.
     var isOverflowExpanded: Bool {
         HostedOverflow.isExpanded(
@@ -62,7 +66,14 @@ struct MenuBarAgentLayout {
     }
 
     /// Reads the current layout, or returns `nil` if the agent can't be read.
-    static func current() -> MenuBarAgentLayout? {
+    ///
+    /// - Parameter ownWindowFrames: The frames of Lynx Bar's status item
+    ///   windows. With no `«` to tell the windows apart, the item-list window
+    ///   is the one whose own slots match the most of these frames, by
+    ///   ``HostedHidingWidth/slot(forWindowFrame:in:)``. The windows differ:
+    ///   a divider can have another width in each, and our windows follow
+    ///   only one of them.
+    static func current(ownWindowFrames: [CGRect] = []) -> MenuBarAgentLayout? {
         guard
             let agent = NSRunningApplication.runningApplications(withBundleIdentifier: agentBundleIdentifier).first,
             let app = AXHelpers.application(for: agent)
@@ -96,7 +107,20 @@ struct MenuBarAgentLayout {
             }
         }
 
-        let listIndex = windows.indices.first { $0 != liveIndex }
+        let listIndex: Int?
+        if let liveIndex {
+            listIndex = windows.indices.first { $0 != liveIndex }
+            layout.listWindowChoice = listIndex.map { ($0, "the window without the «") }
+        } else if
+            !ownWindowFrames.isEmpty,
+            let best = bestMatchingWindow(windows, ownWindowFrames: ownWindowFrames, ownPID: ownPID)
+        {
+            listIndex = best
+            layout.listWindowChoice = (best, "most of our windows matched")
+        } else {
+            listIndex = windows.indices.first
+            layout.listWindowChoice = listIndex.map { ($0, "the first window") }
+        }
         if let listIndex {
             layout.listItems = windows[listIndex].compactMap { slot in
                 guard case let .item(frame, element) = slot else {
@@ -112,6 +136,32 @@ struct MenuBarAgentLayout {
             .sorted { $0.frame.minX < $1.frame.minX }
         }
         return layout
+    }
+
+    /// The index of the window whose own slots match the most of our window
+    /// frames, or `nil` if no window matches more than the others.
+    private static func bestMatchingWindow(
+        _ windows: [[Slot]],
+        ownWindowFrames: [CGRect],
+        ownPID: pid_t
+    ) -> Int? {
+        let counts = windows.map { slots in
+            let ownSlots = slots.compactMap { slot -> CGRect? in
+                guard case let .item(frame, element) = slot, AXHelpers.pid(for: element) == ownPID else {
+                    return nil
+                }
+                return frame
+            }
+            return ownWindowFrames.count { HostedHidingWidth.slot(forWindowFrame: $0, in: ownSlots) != nil }
+        }
+        guard
+            let best = counts.indices.max(by: { counts[$0] < counts[$1] }),
+            counts[best] > 0,
+            counts.filter({ $0 == counts[best] }).count == 1
+        else {
+            return nil
+        }
+        return best
     }
 
     /// Reads the slots of one agent window.
