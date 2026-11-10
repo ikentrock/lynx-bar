@@ -89,16 +89,6 @@ enum HostedSections {
         return allowed.sorted()
     }
 
-    /// The live slot of the Lynx icon: our own slot that matches no divider
-    /// window (by `HostedHidingWidth.slot(forWindowFrame:in:)`'s rule: same
-    /// width ±2, nearest x).
-    static func lynxIconSlot(ownSlots: [CGRect], dividerWindowFrames: [CGRect]) -> CGRect? {
-        let dividerSlots = dividerWindowFrames.compactMap {
-            HostedHidingWidth.slot(forWindowFrame: $0, in: ownSlots)
-        }
-        return ownSlots.first { !dividerSlots.contains($0) }
-    }
-
     /// One on-screen window, for ``holdsRehide(windows:revealedPIDs:)``.
     struct WindowSummary: Equatable {
         let ownerPID: pid_t
@@ -147,7 +137,7 @@ enum HostedSections {
             return (found, .byFrame)
         }
         guard
-            matched.count { $0 == nil } <= 1,
+            matched.count(where: { $0 == nil }) <= 1,
             ownSlots.count == matched.count,
             zip(matched, ownSlots).allSatisfy({ match, slot in match.map { $0 == slot } ?? true })
         else {
