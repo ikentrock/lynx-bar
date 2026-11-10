@@ -146,6 +146,24 @@ enum HostedSections {
         return (ownSlots, .byOrder)
     }
 
+    /// Whether apps that just launched need the allowlist applied again.
+    ///
+    /// Only an app the active allowlist doesn't already account for does,
+    /// or a relaunched MenuBarAgent, which drops the assertion. Helper
+    /// processes of apps already allowed don't.
+    ///
+    /// - Parameters:
+    ///   - added: The bundle identifiers of the processes that launched.
+    ///   - covered: The bundle identifiers the active allowlist was built
+    ///     from, allowed or excluded, or `nil` if nothing is hidden.
+    ///   - agentBundleIdentifier: MenuBarAgent's bundle identifier.
+    static func needsReapply(added: Set<String>, covered: Set<String>?, agentBundleIdentifier: String) -> Bool {
+        guard let covered else {
+            return false
+        }
+        return added.contains(agentBundleIdentifier) || !added.isSubset(of: covered)
+    }
+
     /// Whether the app bundle sits directly in /Applications.
     static func isInApplicationsFolder(_ bundleURL: URL) -> Bool {
         bundleURL.standardizedFileURL.deletingLastPathComponent().path == "/Applications"
