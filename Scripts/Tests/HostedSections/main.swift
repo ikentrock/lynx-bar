@@ -93,6 +93,33 @@ expect(
     "the Lynx icon is the own slot that matches no divider"
 )
 
+// Our items in the list, in their usual order: always-hidden divider, hidden divider, Lynx icon.
+let ahSlot = CGRect(x: 1300, y: 0, width: 16, height: 30)
+let hSlot = CGRect(x: 1371, y: 0, width: 16, height: 30)
+let iconSlot = CGRect(x: 1636, y: 0, width: 33, height: 30)
+let allMatched = HostedSections.ownItemSlots(matched: [ahSlot, hSlot, iconSlot], ownSlots: [ahSlot, hSlot, iconSlot])
+expect(allMatched?.slots == [ahSlot, hSlot, iconSlot] && allMatched?.match == .byFrame, "all matched: by frame")
+let swapped = HostedSections.ownItemSlots(matched: [hSlot, ahSlot, iconSlot], ownSlots: [ahSlot, hSlot, iconSlot])
+expect(swapped?.slots == [hSlot, ahSlot, iconSlot] && swapped?.match == .byFrame, "moved items keep their frame matches")
+expect(
+    HostedSections.ownItemSlots(matched: [nil, nil], ownSlots: [iconSlot, hSlot]) == nil,
+    "nothing matched: nil, not the order"
+)
+let oneUnmatched = HostedSections.ownItemSlots(matched: [nil, iconSlot], ownSlots: [hSlot, iconSlot])
+expect(oneUnmatched?.slots == [hSlot, iconSlot] && oneUnmatched?.match == .byOrder, "one unmatched: the order fills it in")
+expect(
+    HostedSections.ownItemSlots(matched: [nil, nil, iconSlot], ownSlots: [hSlot, ahSlot, iconSlot]) == nil,
+    "two unmatched: nil"
+)
+expect(
+    HostedSections.ownItemSlots(matched: [nil, hSlot], ownSlots: [hSlot, iconSlot]) == nil,
+    "the order must agree with the matches"
+)
+expect(
+    HostedSections.ownItemSlots(matched: [nil, iconSlot], ownSlots: [hSlot, ahSlot, iconSlot]) == nil,
+    "the order needs one list item per section"
+)
+
 expect(HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Applications/Lynx Bar.app")), "/Applications counts")
 expect(!HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Users/x/Applications/Lynx Bar.app")), "~/Applications doesn't")
 expect(!HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Applications/Tools/Lynx Bar.app")), "a subfolder doesn't")
