@@ -54,11 +54,24 @@ enum AXHelpers {
         queue.sync { try? app.windows() } ?? []
     }
 
-    static func description(for element: UIElement) -> String? {
-        queue.sync { try? element.attribute(.description) }
-    }
-
     static func pid(for element: UIElement) -> pid_t? {
         queue.sync { try? element.pid() }
+    }
+
+    static func identifier(for element: UIElement) -> String? {
+        queue.sync { try? element.attribute(.identifier) }
+    }
+
+    /// Presses the element, and returns whether it accepted the press.
+    @discardableResult
+    static func press(_ element: UIElement) -> Bool {
+        queue.sync {
+            do {
+                try element.performAction(.press)
+                return true
+            } catch {
+                return false
+            }
+        }
     }
 }

@@ -33,7 +33,9 @@ struct AdvancedSettingsPane: View {
             LynxSection("Other") {
                 hideApplicationMenus
                 enableSecondaryContextMenu
-                showOnHoverDelay
+                if isShowOnHoverAvailable {
+                    showOnHoverDelay
+                }
                 tempShowInterval
             }
             LynxSection("Permissions") {
@@ -101,6 +103,15 @@ struct AdvancedSettingsPane: View {
             )
             .padding(.trailing, 75)
         }
+    }
+
+    /// A Boolean value that indicates whether show on hover can be used.
+    /// On macOS 27 it needs MenuBarAgent's allowlist.
+    private var isShowOnHoverAvailable: Bool {
+        if #available(macOS 27.0, *) {
+            return HostedAllowlist.isAvailable
+        }
+        return true
     }
 
     @ViewBuilder

@@ -30,10 +30,18 @@ extension MenuBarItemManager {
     @available(macOS 27.0, *)
     func updateHostedHidingWidths() {
         guard
+            HostedHidingWidth.isEnabled,
             let menuBarManager = appState?.menuBarManager,
             let layout = MenuBarAgentLayout.current(),
             let screen = NSScreen.screenWithActiveMenuBar ?? NSScreen.main
         else {
+            return
+        }
+
+        // While the system's overflow is open, the divider is squeezed to a
+        // point and its slot no longer matches its window, which would look
+        // like a dropped divider. Measure again once it closes.
+        guard !layout.isOverflowExpanded else {
             return
         }
 
@@ -73,6 +81,7 @@ extension MenuBarItemManager {
                 continue
             case .reset:
                 logger.info("Divider \(identifier.rawValue, privacy: .public) isn't in the menu bar; resetting it")
+                logger.debug("Divider window frame \(windowFrame.debugDescription, privacy: .public); own slots \(layout.ownSlots.debugDescription, privacy: .public)")
                 requestHostedMeasurement(after: .milliseconds(600))
                 continue
             case .giveUp:

@@ -244,7 +244,7 @@ development Mac.
   upstream left unchecked, and only macOS 26 is available for testing. Mitigation: the code
   path is identical on every version; regressions get reported and fixed later.
 - **The spike moved a real menu bar item.** During a negative-test run the item manager logged
-  moving the OneDrive item next to the Microsoft 365 Copilot item, presumably while enforcing
+  moving one app's item next to another's, presumably while enforcing
   the section order. Item moves on a half-working connection are a hazard. Mitigation: when
   the helper is refused, the item manager must not move items (part of the "helper couldn't
   start" state in section 4).

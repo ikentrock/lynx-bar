@@ -34,12 +34,23 @@ final class GeneralSettings: ObservableObject {
     /// A Boolean value that indicates whether the Lynx Shelf is in use.
     ///
     /// Always `false` on macOS 27, where menu bar items can't be listed yet.
-    /// The stored setting is kept, so the Shelf comes back once they can.
+    /// There the setting opens the system's overflow instead (see
+    /// ``showsSystemOverflow``).
     var isLynxShelfActive: Bool {
         if #available(macOS 27.0, *) {
             return false
         }
         return useLynxShelf
+    }
+
+    /// A Boolean value that indicates whether showing the hidden section
+    /// also opens the system's overflow (`«`), for the items that still
+    /// don't fit. This stands in for the Lynx Shelf on macOS 27.
+    var showsSystemOverflow: Bool {
+        if #available(macOS 27.0, *) {
+            return useLynxShelf
+        }
+        return false
     }
 
     /// The location where the Lynx Shelf appears.
@@ -54,6 +65,19 @@ final class GeneralSettings: ObservableObject {
     /// should be shown when the mouse pointer hovers over an
     /// empty area of the menu bar.
     @Published var showOnHover = false
+
+    /// A Boolean value that indicates whether show on hover is in effect.
+    ///
+    /// On macOS 27 it needs MenuBarAgent's allowlist, and it works on the
+    /// Lynx icon only. Without the allowlist, the hidden divider is the empty
+    /// space in the middle of the bar, and showing the section on hover would
+    /// rearrange the whole bar under the pointer. The stored setting is kept.
+    var isShowOnHoverActive: Bool {
+        if #available(macOS 27.0, *) {
+            return showOnHover && HostedAllowlist.isAvailable
+        }
+        return showOnHover
+    }
 
     /// A Boolean value that indicates whether the hidden section
     /// should be shown or hidden when the user scrolls in the

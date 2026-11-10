@@ -16,6 +16,14 @@ import CoreGraphics
 ///
 /// Ported from IceMelt (https://github.com/pnikolaidis/icemelt, PR #46), GPL-3.0.
 enum HostedHidingWidth {
+    /// Whether dividers hide their sections by filling the free space.
+    ///
+    /// Off: the owner chose (2026-11-10) to let macOS 27 decide what goes into
+    /// its overflow. Filling the space left a wide blank in the middle of the
+    /// bar. With this off, dividers keep their standard length, and showing
+    /// or hiding a section opens or closes the overflow instead.
+    static let isEnabled = false
+
     /// Space left between the region's start and the hidden items. It must be
     /// narrower than any item, or the section's last item stays in the bar.
     static let margin: CGFloat = 8
@@ -61,11 +69,29 @@ enum HostedHidingWidth {
     }
 
     /// Returns the slot that belongs to the status item window with the
-    /// given frame. Slots and windows share the x axis.
+    /// given frame: the slot of the same width that lies nearest to it.
+    ///
+    /// Slots and windows share the x axis, but from macOS 27.2 the window
+    /// follows the agent's list of every item, not the live bar, so it can
+    /// sit some way right of its slot.
     static func slot(forWindowFrame windowFrame: CGRect, in ownSlots: [CGRect]) -> CGRect? {
-        ownSlots.first { slot in
-            abs(slot.minX - windowFrame.minX) <= 2 && abs(slot.width - windowFrame.width) <= 2
-        }
+        ownSlots
+            .filter { abs($0.width - windowFrame.width) <= 2 }
+            .min { abs($0.minX - windowFrame.minX) < abs($1.minX - windowFrame.minX) }
+    }
+
+    /// Returns the frames of the menu bar's items, for telling items apart
+    /// from empty space. A divider fills the empty space with its slot, so
+    /// slots that match a divider's window are left out.
+    static func itemFrames(
+        ownSlots: [CGRect],
+        otherSlots: [CGRect],
+        chevron: CGRect?,
+        dividerWindowFrames: [CGRect]
+    ) -> [CGRect] {
+        let dividerSlots = dividerWindowFrames.compactMap { slot(forWindowFrame: $0, in: ownSlots) }
+        let items = ownSlots.filter { !dividerSlots.contains($0) } + otherSlots
+        return chevron.map { items + [$0] } ?? items
     }
 
     /// Returns whether a dropped divider may be reset again after

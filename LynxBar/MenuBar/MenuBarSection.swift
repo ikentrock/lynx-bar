@@ -3,11 +3,14 @@
 //  LynxBar
 //
 
+import OSLog
 import SwiftUI
 
 /// A representation of a section in a menu bar.
 @MainActor
 final class MenuBarSection {
+    private static let logger = Logger(category: "MenuBarSection")
+
     /// The name of a menu bar section.
     enum Name: CaseIterable {
         case visible
@@ -57,6 +60,12 @@ final class MenuBarSection {
     /// A Boolean value that indicates whether the Lynx Shelf should be used.
     private var useLynxShelf: Bool {
         appState?.settings.general.isLynxShelfActive ?? false
+    }
+
+    /// A Boolean value that indicates whether showing the section also opens
+    /// the system's overflow (`«`), in place of the Lynx Shelf on macOS 27.
+    private var usesSystemOverflow: Bool {
+        appState?.settings.general.showsSystemOverflow ?? false
     }
 
     /// A weak reference to the menu bar manager.
@@ -154,6 +163,7 @@ final class MenuBarSection {
         guard let menuBarManager, isHidden else {
             return
         }
+        Self.logger.debug("Showing the \(self.name.logString, privacy: .public)")
 
         guard controlItem.isAddedToMenuBar else {
             // The section is disabled.
@@ -204,12 +214,46 @@ final class MenuBarSection {
             }
         }
 
+        menuBarManager.hostedSectionsDidChange()
+
         startRehideChecks()
         appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
+
+        if usesSystemOverflow {
+            Task {
+                await openSystemOverflow()
+            }
+        }
     }
 
     /// Hides the section.
     func hide() {
+        guard !isHidden else {
+            return
+        }
+        Self.logger.debug("Hiding the \(self.name.logString, privacy: .public)")
+
+        // Close the system's overflow before the divider grows: the reflow
+        // would move the « away from the click. Requests are queued, so this
+        // also waits for an open that's still in progress.
+        if
+            #available(macOS 27.0, *),
+            usesSystemOverflow,
+            let appState,
+            SystemOverflow.isChanging || SystemOverflow.isExpanded
+        {
+            Task {
+                await SystemOverflow.setExpanded(false, hidEventManager: appState.hidEventManager)
+                hideInMenuBar()
+            }
+            return
+        }
+
+        hideInMenuBar()
+    }
+
+    /// Hides the section in the menu bar.
+    private func hideInMenuBar() {
         guard let menuBarManager, !isHidden else {
             return
         }
@@ -226,6 +270,8 @@ final class MenuBarSection {
             controlItem.state = .hideSection
         }
 
+        menuBarManager.hostedSectionsDidChange()
+
         stopRehideChecks()
         appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
     }
@@ -235,9 +281,24 @@ final class MenuBarSection {
         if isHidden { show() } else { hide() }
     }
 
+    /// Opens the system's overflow once the shown section has settled in the
+    /// bar, if any items still don't fit.
+    private func openSystemOverflow() async {
+        guard #available(macOS 27.0, *), let appState else {
+            return
+        }
+        // Showing the section shrinks its divider, and the bar reflows.
+        try? await Task.sleep(for: .milliseconds(500))
+        guard !isHidden else {
+            return
+        }
+        await SystemOverflow.setExpanded(true, hidEventManager: appState.hidEventManager)
+    }
+
     /// Starts running checks to determine when to rehide the section.
     private func startRehideChecks() {
         rehideTimer?.invalidate()
+        rehideTimer = nil
         rehideMonitor?.stop()
 
         guard
@@ -268,8 +329,18 @@ final class MenuBarSection {
                             return
                         }
                         if NSEvent.mouseLocation.y < screen.visibleFrame.maxY {
-                            Task {
-                                await self.hide()
+                            Task { @MainActor in
+                                // On macOS 27, hiding removes the revealed apps'
+                                // items, which closes their open menus, popovers
+                                // and panels. Wait for them.
+                                if
+                                    #available(macOS 27.0, *),
+                                    appState.hidEventManager.holdsHostedRehide(appState: appState)
+                                {
+                                    self.startRehideChecks()
+                                } else {
+                                    self.hide()
+                                }
                             }
                         } else {
                             Task {

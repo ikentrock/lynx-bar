@@ -57,6 +57,11 @@ final class MenuBarManager: ObservableObject {
         MenuBarSection(name: .alwaysHidden),
     ]
 
+    /// The manager that hides sections through MenuBarAgent's allowlist on
+    /// macOS 27, if it's in use. Stored as `AnyObject` because of
+    /// availability: cast it to `HostedVisibilityManager`.
+    private(set) var hostedVisibility: AnyObject?
+
     /// A Boolean value that indicates whether at least one of the manager's
     /// sections is visible.
     var hasVisibleSection: Bool {
@@ -72,6 +77,30 @@ final class MenuBarManager: ObservableObject {
         appearanceEditorPanel.performSetup(with: appState)
         for section in sections {
             section.performSetup(with: appState)
+        }
+        if #available(macOS 27.0, *), HostedAllowlist.isAvailable {
+            hostedVisibility = HostedVisibilityManager(appState: appState)
+        }
+    }
+
+    /// Stops using the allowlist for the rest of the session.
+    func removeHostedVisibility() {
+        hostedVisibility = nil
+    }
+
+    /// The bundle identifiers of the hidden apps that are being shown now on
+    /// macOS 27, or an empty set if the allowlist isn't in use.
+    var hostedRevealedBundleIdentifiers: Set<String> {
+        if #available(macOS 27.0, *), let manager = hostedVisibility as? HostedVisibilityManager {
+            return manager.revealedBundleIdentifiers
+        }
+        return []
+    }
+
+    /// Tells the allowlist manager, if any, that the sections' states changed.
+    func hostedSectionsDidChange() {
+        if #available(macOS 27.0, *), let manager = hostedVisibility as? HostedVisibilityManager {
+            manager.sectionsDidChange()
         }
     }
 
