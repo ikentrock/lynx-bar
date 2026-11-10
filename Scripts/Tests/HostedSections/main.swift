@@ -120,6 +120,24 @@ expect(
     "the order needs one list item per section"
 )
 
+// Rehiding waits for windows above the normal level of the revealed apps only.
+func window(_ pid: pid_t, _ layer: Int) -> HostedSections.WindowSummary {
+    HostedSections.WindowSummary(ownerPID: pid, layer: layer)
+}
+let revealedPIDs: Set<pid_t> = [1722, 1801]
+expect(HostedSections.holdsRehide(windows: [window(1722, 101)], revealedPIDs: revealedPIDs), "a revealed app's menu holds")
+expect(HostedSections.holdsRehide(windows: [window(1801, 3)], revealedPIDs: revealedPIDs), "a revealed app's panel holds")
+expect(HostedSections.holdsRehide(windows: [window(1801, 25)], revealedPIDs: revealedPIDs), "a revealed app's popover holds")
+expect(
+    !HostedSections.holdsRehide(windows: [window(1722, 0)], revealedPIDs: revealedPIDs),
+    "a revealed app's normal window doesn't hold"
+)
+expect(
+    !HostedSections.holdsRehide(windows: [window(764, 20), window(999, 101)], revealedPIDs: revealedPIDs),
+    "other apps' windows, even at the menu level, don't hold"
+)
+expect(!HostedSections.holdsRehide(windows: [window(1722, 101)], revealedPIDs: []), "nothing revealed: no hold")
+
 expect(HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Applications/Lynx Bar.app")), "/Applications counts")
 expect(!HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Users/x/Applications/Lynx Bar.app")), "~/Applications doesn't")
 expect(!HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Applications/Tools/Lynx Bar.app")), "a subfolder doesn't")

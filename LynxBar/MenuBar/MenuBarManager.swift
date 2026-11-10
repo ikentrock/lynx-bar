@@ -88,6 +88,15 @@ final class MenuBarManager: ObservableObject {
         hostedVisibility = nil
     }
 
+    /// The bundle identifiers of the hidden apps that are being shown now on
+    /// macOS 27, or an empty set if the allowlist isn't in use.
+    var hostedRevealedBundleIdentifiers: Set<String> {
+        if #available(macOS 27.0, *), let manager = hostedVisibility as? HostedVisibilityManager {
+            return manager.revealedBundleIdentifiers
+        }
+        return []
+    }
+
     /// Tells the allowlist manager, if any, that the sections' states changed.
     func hostedSectionsDidChange() {
         if #available(macOS 27.0, *), let manager = hostedVisibility as? HostedVisibilityManager {

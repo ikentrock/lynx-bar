@@ -31,6 +31,10 @@ final class HIDEventManager: ObservableObject {
     /// was read.
     private var hostedLynxIconSlot: (date: Date, slot: CGRect?)?
 
+    /// Whether a revealed app had a window open on macOS 27, and when that
+    /// was read.
+    private var hostedRehideHold: (date: Date, holds: Bool)?
+
     /// A Boolean value that indicates whether the mouse pointer was inside
     /// the Lynx icon on the last mouse move, on macOS 27. Show on hover fires
     /// only when the pointer enters the icon.
@@ -425,8 +429,8 @@ extension HIDEventManager {
     /// The section shows when the pointer enters the Lynx icon, so the icon
     /// shows it at most once per entry, even if a click hides it again while
     /// the pointer rests on it. It hides when the pointer leaves the menu
-    /// bar, as on macOS 26, but not while a menu is open: hiding removes the
-    /// revealed apps' items, which would close the menu.
+    /// bar, as on macOS 26, but not while a revealed app has a menu, popover
+    /// or panel open: hiding removes its items, which would close it.
     @available(macOS 27.0, *)
     private func handleHostedShowOnHover(
         appState: AppState,
@@ -451,17 +455,18 @@ extension HIDEventManager {
             guard
                 !isMouseInsideMenuBar(appState: appState, screen: screen),
                 !isMouseInsideLynxShelf(appState: appState),
-                !isMenuOpen
+                !holdsHostedRehide(appState: appState)
             else {
                 return
             }
             Task {
                 try await Task.sleep(for: .seconds(delay))
-                // Make sure the mouse is still outside, and no menu opened.
+                // Make sure the mouse is still outside, and no revealed app
+                // opened a window.
                 guard
                     !isMouseInsideMenuBar(appState: appState, screen: screen),
                     !isMouseInsideLynxShelf(appState: appState),
-                    !isMenuOpen
+                    !holdsHostedRehide(appState: appState)
                 else {
                     return
                 }
@@ -672,11 +677,31 @@ extension HIDEventManager {
         return slot
     }
 
-    /// A Boolean value that indicates whether a menu is open, that is,
-    /// whether an on-screen window is at the pop-up menu level.
-    var isMenuOpen: Bool {
-        let menuLevel = CGWindowLevelForKey(.popUpMenuWindow)
-        return WindowInfo.createWindows(option: .onScreen).contains { $0.layer == Int(menuLevel) }
+    /// A Boolean value that indicates whether rehiding must wait on macOS 27:
+    /// an app being revealed has an on-screen window above the normal level
+    /// (a menu, popover or panel). Hiding removes the app's items, which
+    /// would close it.
+    ///
+    /// The window list is read at most every 250 ms, since this runs on
+    /// mouse moves.
+    @available(macOS 27.0, *)
+    func holdsHostedRehide(appState: AppState) -> Bool {
+        if let hostedRehideHold, Date.now.timeIntervalSince(hostedRehideHold.date) < 0.25 {
+            return hostedRehideHold.holds
+        }
+        let revealed = appState.menuBarManager.hostedRevealedBundleIdentifiers
+        var holds = false
+        if !revealed.isEmpty {
+            let revealedPIDs = Set(NSWorkspace.shared.runningApplications.compactMap { app in
+                app.bundleIdentifier.flatMap { revealed.contains($0) ? app.processIdentifier : nil }
+            })
+            let windows = WindowInfo.createWindows(option: .onScreen).map {
+                HostedSections.WindowSummary(ownerPID: $0.ownerPID, layer: $0.layer)
+            }
+            holds = HostedSections.holdsRehide(windows: windows, revealedPIDs: revealedPIDs)
+        }
+        hostedRehideHold = (.now, holds)
+        return holds
     }
 
     /// A Boolean value that indicates whether the mouse pointer is within
