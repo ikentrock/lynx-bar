@@ -66,6 +66,19 @@ final class GeneralSettings: ObservableObject {
     /// empty area of the menu bar.
     @Published var showOnHover = false
 
+    /// A Boolean value that indicates whether show on hover is in effect.
+    ///
+    /// Always `false` on macOS 27, where the hidden divider is the empty
+    /// space in the middle of the bar: showing the section on hover rearranges
+    /// the whole bar under the pointer, and from macOS 27.2 the system already
+    /// opens its own overflow (`«`) on hover. The stored setting is kept.
+    var isShowOnHoverActive: Bool {
+        if #available(macOS 27.0, *) {
+            return false
+        }
+        return showOnHover
+    }
+
     /// A Boolean value that indicates whether the hidden section
     /// should be shown or hidden when the user scrolls in the
     /// menu bar.

@@ -56,4 +56,75 @@ expect(
     "the « is clicked at its centre"
 )
 
+// Measured on macOS 27.2 with the hidden section hidden and the overflow
+// closed. Window 0 is the live bar; window 1 lists every item side by side,
+// hidden or not, and has no «.
+let liveChevron = slot(394, 18)
+let liveOwn = [slot(567, 960)]
+let liveOther = [
+    slot(369, 42), slot(373, 38), slot(375, 36), slot(375, 36), slot(379, 32),
+    slot(433, 20), slot(467, 67), slot(534, 33), slot(1527, 32), slot(1559, 38),
+]
+let listOwn = [slot(567, 960)]
+let listOther = [
+    slot(175, 20), slot(209, 40), slot(249, 34), slot(283, 36), slot(319, 42),
+    slot(361, 32), slot(393, 36), slot(429, 38), slot(467, 67), slot(534, 33),
+    slot(1527, 32), slot(1559, 38),
+]
+
+expect(
+    HostedOverflow.isExpanded(chevron: liveChevron, ownSlots: liveOwn + listOwn, otherSlots: liveOther + listOther),
+    "merging the 27.2 item list into the live bar misreads a closed overflow as open"
+)
+expect(
+    !HostedOverflow.isExpanded(chevron: liveChevron, ownSlots: liveOwn, otherSlots: liveOther),
+    "the 27.2 live bar alone reads as closed"
+)
+
+let liveIdentifiers: [String?] = [HostedOverflow.collapsedIdentifier] + Array(repeating: nil, count: 17)
+let listIdentifiers = [String?](repeating: nil, count: 19)
+expect(
+    HostedOverflow.liveWindowIndex(slotIdentifiers: [liveIdentifiers, listIdentifiers]) == 0,
+    "the window holding the « is the live bar"
+)
+expect(
+    HostedOverflow.liveWindowIndex(slotIdentifiers: [listIdentifiers, liveIdentifiers]) == 1,
+    "the live bar is found whatever the window order"
+)
+expect(
+    HostedOverflow.liveWindowIndex(slotIdentifiers: [[nil, nil], [nil]]) == nil,
+    "without an identified « every window is read"
+)
+
+expect(
+    HostedOverflow.isExpanded(indicatorIdentifier: HostedOverflow.collapsedIdentifier) == false,
+    "the collapsed « says the overflow is closed"
+)
+expect(
+    HostedOverflow.isExpanded(indicatorIdentifier: HostedOverflow.expandedIdentifier) == true,
+    "the expanded « says the overflow is open"
+)
+expect(
+    HostedOverflow.isExpanded(indicatorIdentifier: "something-else") == nil,
+    "other identifiers say nothing"
+)
+expect(
+    !HostedOverflow.isExpanded(
+        indicatorIdentifier: HostedOverflow.collapsedIdentifier,
+        chevron: liveChevron,
+        ownSlots: liveOwn + listOwn,
+        otherSlots: liveOther + listOther
+    ),
+    "the «'s identifier wins over the geometry"
+)
+expect(
+    HostedOverflow.isExpanded(
+        indicatorIdentifier: nil,
+        chevron: expandedChevron,
+        ownSlots: expandedOwn,
+        otherSlots: expandedOther
+    ),
+    "without an identifier the geometry decides, as on 27.0"
+)
+
 finishTests("HostedOverflow")

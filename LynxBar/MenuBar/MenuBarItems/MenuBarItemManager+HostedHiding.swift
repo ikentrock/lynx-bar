@@ -30,6 +30,7 @@ extension MenuBarItemManager {
     @available(macOS 27.0, *)
     func updateHostedHidingWidths() {
         guard
+            HostedHidingWidth.isEnabled,
             let menuBarManager = appState?.menuBarManager,
             let layout = MenuBarAgentLayout.current(),
             let screen = NSScreen.screenWithActiveMenuBar ?? NSScreen.main
@@ -80,6 +81,7 @@ extension MenuBarItemManager {
                 continue
             case .reset:
                 logger.info("Divider \(identifier.rawValue, privacy: .public) isn't in the menu bar; resetting it")
+                logger.debug("Divider window frame \(windowFrame.debugDescription, privacy: .public); own slots \(layout.ownSlots.debugDescription, privacy: .public)")
                 requestHostedMeasurement(after: .milliseconds(600))
                 continue
             case .giveUp:

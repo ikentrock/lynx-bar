@@ -3,11 +3,14 @@
 //  LynxBar
 //
 
+import OSLog
 import SwiftUI
 
 /// A representation of a section in a menu bar.
 @MainActor
 final class MenuBarSection {
+    private static let logger = Logger(category: "MenuBarSection")
+
     /// The name of a menu bar section.
     enum Name: CaseIterable {
         case visible
@@ -160,6 +163,7 @@ final class MenuBarSection {
         guard let menuBarManager, isHidden else {
             return
         }
+        Self.logger.debug("Showing the \(self.name.logString, privacy: .public)")
 
         guard controlItem.isAddedToMenuBar else {
             // The section is disabled.
@@ -225,6 +229,7 @@ final class MenuBarSection {
         guard !isHidden else {
             return
         }
+        Self.logger.debug("Hiding the \(self.name.logString, privacy: .public)")
 
         // Close the system's overflow before the divider grows: the reflow
         // would move the « away from the click. Requests are queued, so this

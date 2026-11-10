@@ -33,7 +33,10 @@ struct AdvancedSettingsPane: View {
             LynxSection("Other") {
                 hideApplicationMenus
                 enableSecondaryContextMenu
-                showOnHoverDelay
+                // Show on hover isn't available on macOS 27.
+                if #unavailable(macOS 27.0) {
+                    showOnHoverDelay
+                }
                 tempShowInterval
             }
             LynxSection("Permissions") {
