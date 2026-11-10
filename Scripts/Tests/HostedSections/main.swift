@@ -175,4 +175,27 @@ expect(HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Applications
 expect(!HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Users/x/Applications/Lynx Bar.app")), "~/Applications doesn't")
 expect(!HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Applications/Tools/Lynx Bar.app")), "a subfolder doesn't")
 
+let agent = "com.apple.MenuBarAgent"
+let covered: Set<String> = ["com.google.Chrome", "com.microsoft.teams2", "com.electron.ollama"]
+expect(
+    !HostedSections.needsReapply(added: ["com.google.Chrome"], covered: covered, agentBundleIdentifier: agent),
+    "a helper of an allowed app doesn't reapply"
+)
+expect(
+    !HostedSections.needsReapply(added: ["com.electron.ollama"], covered: covered, agentBundleIdentifier: agent),
+    "a relaunched hidden app doesn't reapply"
+)
+expect(
+    HostedSections.needsReapply(added: ["com.google.Chrome", "net.new.app"], covered: covered, agentBundleIdentifier: agent),
+    "a new app reapplies"
+)
+expect(
+    HostedSections.needsReapply(added: [agent], covered: covered.union([agent]), agentBundleIdentifier: agent),
+    "a relaunched MenuBarAgent always reapplies"
+)
+expect(
+    !HostedSections.needsReapply(added: ["net.new.app", agent], covered: nil, agentBundleIdentifier: agent),
+    "nothing hidden: no reapply"
+)
+
 finishTests("HostedSections")

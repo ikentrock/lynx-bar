@@ -52,6 +52,15 @@ final class HostedVisibilityManager {
     /// Bumped by `clear()`, so jobs queued before it don't run.
     private var generation = 0
 
+    /// How many queued jobs haven't started yet. A reapply is dropped
+    /// while one is waiting, since that job reads the current state anyway.
+    private var waitingJobs = 0
+
+    /// The bundle identifiers the active allowlist was built from, allowed
+    /// or excluded, or `nil` while nothing is hidden. Set when an apply
+    /// starts, so an app that launches during it still counts as new.
+    private var coveredBundleIdentifiers: Set<String>?
+
     /// Set when applying failed. Nothing runs after that.
     private var isStopped = false
 
@@ -123,7 +132,11 @@ final class HostedVisibilityManager {
     }
 
     /// Re-applies the current allowlist (after wake, or when apps launch).
+    /// Does nothing while another job is waiting to run.
     func reapply() {
+        guard waitingJobs == 0 else {
+            return
+        }
         enqueue()
     }
 
@@ -148,18 +161,29 @@ final class HostedVisibilityManager {
     func clear() {
         generation += 1
         tail = nil
+        waitingJobs = 0
+        coveredBundleIdentifiers = nil
         applied = AppliedState(hidesHidden: false, hidesAlwaysHidden: false)
         allowlist.clear()
     }
 
-    /// Reapplies, at most once per run-loop turn, when apps were added to
-    /// the running apps. That includes MenuBarAgent relaunching, which drops
-    /// the assertion.
+    /// Reapplies, at most once per run-loop turn, when apps the active
+    /// allowlist doesn't account for were added to the running apps, or
+    /// MenuBarAgent relaunched, which drops the assertion. Helper processes
+    /// of apps already allowed don't reapply.
     private func runningAppsDidChange() {
         let current = Self.bundleIdentifiersByPID(of: NSWorkspace.shared.runningApplications)
         let added = Set(current.compactMap { pid, id in runningApps[pid] == nil ? id : nil })
         runningApps = current
-        guard !added.isEmpty, !isStopped, !isRunningAppsReapplyScheduled else {
+        guard
+            !isStopped,
+            !isRunningAppsReapplyScheduled,
+            HostedSections.needsReapply(
+                added: added,
+                covered: coveredBundleIdentifiers,
+                agentBundleIdentifier: MenuBarAgentLayout.agentBundleIdentifier
+            )
+        else {
             return
         }
         isRunningAppsReapplyScheduled = true
@@ -200,9 +224,14 @@ final class HostedVisibilityManager {
         }
         let previous = tail
         let myGeneration = generation
+        waitingJobs += 1
         tail = Task { [weak self] in
             await previous?.value
-            guard let self, !isStopped, generation == myGeneration else {
+            guard let self, generation == myGeneration else {
+                return
+            }
+            waitingJobs -= 1
+            guard !isStopped else {
                 return
             }
             await update(generation: myGeneration)
@@ -244,6 +273,7 @@ final class HostedVisibilityManager {
                 Self.logger.debug("Nothing to hide: clearing the allowlist")
                 allowlist.clear()
             }
+            coveredBundleIdentifiers = nil
             applied = state
             return
         }
@@ -268,6 +298,7 @@ final class HostedVisibilityManager {
             candidates: candidates,
             ownBundleIdentifier: ownBundleIdentifier
         )
+        coveredBundleIdentifiers = candidates.union(excluded)
         Self.logger.debug(
             """
             Applying the allowlist: \(allowed.count) apps allowed, \
