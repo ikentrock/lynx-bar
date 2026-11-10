@@ -29,8 +29,8 @@
 
 ## Review Focus
 
-1. **An app that has quit while hidden** (Teams quit, then relaunched). It must stay hidden after relaunch. Covered by a test in Task 1: an unseen app keeps its membership.
-2. **An app with icons on both sides of a divider** (Stats has four icons). It must land in the leftmost section, never split. Covered by a test in Task 1.
+1. **An app that has quit while hidden** (quit, then relaunched). It must stay hidden after relaunch. Covered by a test in Task 1: an unseen app keeps its membership.
+2. **An app with icons on both sides of a divider** (a system monitor with several icons). It must land in the leftmost section, never split. Covered by a test in Task 1.
 3. **The Lynx icon dragged left of the hidden divider.** It must never be hidden. Covered by a test in Task 1: own items are ignored, and the own bundle ID is always in the allowlist.
 4. **Quit or crash while hidden.** Everything must come back. Covered by Task 4's manual check, using `kill -9`.
 5. **Moving the pointer down into a just-opened menu of a revealed app.** It must not rehide and close that menu. Covered by Task 5's manual check.
@@ -104,38 +104,38 @@ Use `own = "com.ikentrock.LynxBar"`. For x-positions, use a helper `item(_ id: S
 ```swift
 expect(!HostedSections.isHideable("com.apple.controlcenter", ownBundleIdentifier: own), "Apple items are never hideable")
 expect(!HostedSections.isHideable(own, ownBundleIdentifier: own), "Lynx Bar is never hideable")
-expect(HostedSections.isHideable("com.microsoft.teams2", ownBundleIdentifier: own), "other apps are hideable")
+expect(HostedSections.isHideable("com.example.meetings", ownBundleIdentifier: own), "other apps are hideable")
 
-let items = [item("chat.rocket", 100), item("com.electron.ollama", 300), item("com.microsoft.teams2", 400),
-             item(own, 450, own: true), item("com.tinyspeck.slackmacgap", 700), item(nil, 750),
+let items = [item("com.example.chat", 100), item("com.example.assistant", 300), item("com.example.meetings", 400),
+             item(own, 450, own: true), item("com.example.messenger", 700), item(nil, 750),
              item("com.apple.weather.menu", 320)]
 let sets = HostedSections.updatedSets(.init(), items: items, hiddenDivider: hiddenDivider,
                                       alwaysHiddenDivider: nil, ownBundleIdentifier: own)
-expect(sets.hidden == ["chat.rocket", "com.electron.ollama", "com.microsoft.teams2"], "apps left of the hidden divider are hidden")
+expect(sets.hidden == ["com.example.chat", "com.example.assistant", "com.example.meetings"], "apps left of the hidden divider are hidden")
 expect(sets.alwaysHidden.isEmpty, "no always-hidden divider, no always-hidden apps")
 
 let withAH = HostedSections.updatedSets(.init(), items: items, hiddenDivider: hiddenDivider,
                                         alwaysHiddenDivider: alwaysHiddenDivider, ownBundleIdentifier: own)
-expect(withAH.alwaysHidden == ["chat.rocket"] && !withAH.hidden.contains("chat.rocket"), "left of the always-hidden divider is always-hidden only")
+expect(withAH.alwaysHidden == ["com.example.chat"] && !withAH.hidden.contains("com.example.chat"), "left of the always-hidden divider is always-hidden only")
 
-let split = HostedSections.updatedSets(.init(), items: [item("eu.exelban.Stats", 500), item("eu.exelban.Stats", 900)],
+let split = HostedSections.updatedSets(.init(), items: [item("com.example.monitor", 500), item("com.example.monitor", 900)],
                                        hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own)
-expect(split.hidden == ["eu.exelban.Stats"], "an app with icons on both sides goes to the leftmost section")
+expect(split.hidden == ["com.example.monitor"], "an app with icons on both sides goes to the leftmost section")
 
-let kept = HostedSections.updatedSets(.init(hidden: ["com.microsoft.teams2"]), items: [item("com.tinyspeck.slackmacgap", 700)],
+let kept = HostedSections.updatedSets(.init(hidden: ["com.example.meetings"]), items: [item("com.example.messenger", 700)],
                                       hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own)
-expect(kept.hidden == ["com.microsoft.teams2"], "an app that isn't drawn keeps its membership")
+expect(kept.hidden == ["com.example.meetings"], "an app that isn't drawn keeps its membership")
 
-let moved = HostedSections.updatedSets(.init(hidden: ["com.microsoft.teams2"]), items: [item("com.microsoft.teams2", 800)],
+let moved = HostedSections.updatedSets(.init(hidden: ["com.example.meetings"]), items: [item("com.example.meetings", 800)],
                                        hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own)
 expect(moved.hidden.isEmpty, "an app seen right of the divider leaves the hidden set")
 
-let candidates: Set = ["chat.rocket", "com.microsoft.teams2", "com.tinyspeck.slackmacgap", own]
-let state = HostedSectionSets(hidden: ["com.microsoft.teams2"], alwaysHidden: ["chat.rocket"])
+let candidates: Set = ["com.example.chat", "com.example.meetings", "com.example.messenger", own]
+let state = HostedSectionSets(hidden: ["com.example.meetings"], alwaysHidden: ["com.example.chat"])
 expect(HostedSections.allowlist(sets: state, hidesHidden: true, hidesAlwaysHidden: true, candidates: candidates, ownBundleIdentifier: own)
-       == ["com.ikentrock.LynxBar", "com.tinyspeck.slackmacgap"], "hiding both sections excludes both sets")
+       == ["com.example.messenger", "com.ikentrock.LynxBar"], "hiding both sections excludes both sets")
 expect(HostedSections.allowlist(sets: state, hidesHidden: false, hidesAlwaysHidden: true, candidates: candidates, ownBundleIdentifier: own)
-       == ["com.ikentrock.LynxBar", "com.microsoft.teams2", "com.tinyspeck.slackmacgap"], "showing hidden keeps always-hidden excluded")
+       == ["com.example.meetings", "com.example.messenger", "com.ikentrock.LynxBar"], "showing hidden keeps always-hidden excluded")
 expect(HostedSections.allowlist(sets: .init(hidden: [own]), hidesHidden: true, hidesAlwaysHidden: false, candidates: [], ownBundleIdentifier: own)
        == [own], "our own bundle ID is always allowed")
 
@@ -275,13 +275,13 @@ final class HostedVisibilityManager {
   - `AppDelegate.applicationWillTerminate` calls `clear()`.
 
 - [ ] **Step 3: Verify by hand** (install to `/Applications`, then stream logs with `/usr/bin/log stream --level debug --predicate 'subsystem == "com.ikentrock.LynxBar"'`):
-  - ⌘-drag Ollama and Rocket.Chat left of the "|" divider, then click the Lynx icon twice. Expected: after the second click both icons are gone, and the log shows an apply that excludes 2 apps.
+  - ⌘-drag two apps left of the "|" divider, then click the Lynx icon twice. Expected: after the second click both icons are gone, and the log shows an apply that excludes 2 apps.
   - Click the Lynx icon. Expected: both are back in their places, and the log shows a clear.
   - Hide, then quit from the Lynx menu. Expected: everything is back.
   - Hide, then `kill -9 $(pgrep -x "Lynx Bar")`. Expected: everything is back.
   - Relaunch. Expected: the same apps hide on the first hide.
-  - Quit Ollama while hidden and relaunch it. Expected: it stays hidden.
-  - Launch an app with a menu bar icon that isn't in a set (for example Amphetamine, after quitting it first) while hidden. Expected: its icon shows.
+  - Quit one of them while hidden and relaunch it. Expected: it stays hidden.
+  - Launch an app with a menu bar icon that isn't in a set (quit it first) while hidden. Expected: its icon shows.
   - `Scripts/run-tests.sh && swiftlint --strict` pass.
 
 - [ ] **Step 4: Commit** — `git add -A && git commit -m "Hide sections through MenuBarAgent's allowlist on macOS 27"`
@@ -315,7 +315,7 @@ final class HostedVisibilityManager {
 
 - [ ] **Step 2: Verify by hand:**
   - Hover the Lynx icon. Expected: hidden apps appear after the delay.
-  - Click Teams and move down into its menu. Expected: the menu stays open, and nothing rehides.
+  - Click a revealed app and move down into its menu. Expected: the menu stays open, and nothing rehides.
   - Close the menu and move away. Expected: rehides.
   - Hover over empty bar space. Expected: nothing happens.
   - Record 20 s of hovering around the Lynx icon with the stream. Expected: no show/hide loop (at most one show per entry).

@@ -16,11 +16,11 @@ func item(_ id: String?, _ x: CGFloat, own: Bool = false) -> HostedItem {
 
 expect(!HostedSections.isHideable("com.apple.controlcenter", ownBundleIdentifier: own), "Apple items are never hideable")
 expect(!HostedSections.isHideable(own, ownBundleIdentifier: own), "Lynx Bar is never hideable")
-expect(HostedSections.isHideable("com.microsoft.teams2", ownBundleIdentifier: own), "other apps are hideable")
+expect(HostedSections.isHideable("com.example.meetings", ownBundleIdentifier: own), "other apps are hideable")
 
 let items = [
-    item("chat.rocket", 100), item("com.electron.ollama", 300), item("com.microsoft.teams2", 400),
-    item(own, 450, own: true), item("com.tinyspeck.slackmacgap", 700), item(nil, 750),
+    item("com.example.chat", 100), item("com.example.assistant", 300), item("com.example.meetings", 400),
+    item(own, 450, own: true), item("com.example.messenger", 700), item(nil, 750),
     item("com.apple.weather.menu", 320),
 ]
 let sets = HostedSections.updatedSets(
@@ -28,7 +28,7 @@ let sets = HostedSections.updatedSets(
     alwaysHiddenDivider: nil, ownBundleIdentifier: own
 )
 expect(
-    sets.hidden == ["chat.rocket", "com.electron.ollama", "com.microsoft.teams2"],
+    sets.hidden == ["com.example.chat", "com.example.assistant", "com.example.meetings"],
     "apps left of the hidden divider are hidden"
 )
 expect(sets.alwaysHidden.isEmpty, "no always-hidden divider, no always-hidden apps")
@@ -38,25 +38,25 @@ let withAH = HostedSections.updatedSets(
     alwaysHiddenDivider: alwaysHiddenDivider, ownBundleIdentifier: own
 )
 expect(
-    withAH.alwaysHidden == ["chat.rocket"] && !withAH.hidden.contains("chat.rocket"),
+    withAH.alwaysHidden == ["com.example.chat"] && !withAH.hidden.contains("com.example.chat"),
     "left of the always-hidden divider is always-hidden only"
 )
 expect(
-    withAH.hidden == ["com.electron.ollama", "com.microsoft.teams2"],
+    withAH.hidden == ["com.example.assistant", "com.example.meetings"],
     "between the dividers is hidden"
 )
 
 let toHidden = HostedSections.updatedSets(
-    .init(alwaysHidden: ["com.microsoft.teams2"]), items: [item("com.microsoft.teams2", 400)],
+    .init(alwaysHidden: ["com.example.meetings"]), items: [item("com.example.meetings", 400)],
     hiddenDivider: hiddenDivider, alwaysHiddenDivider: alwaysHiddenDivider, ownBundleIdentifier: own
 )
 expect(
-    toHidden.hidden == ["com.microsoft.teams2"] && toHidden.alwaysHidden.isEmpty,
+    toHidden.hidden == ["com.example.meetings"] && toHidden.alwaysHidden.isEmpty,
     "an always-hidden app seen between the dividers moves to hidden"
 )
 let toNeither = HostedSections.updatedSets(
-    .init(hidden: ["com.electron.ollama"], alwaysHidden: ["chat.rocket"]),
-    items: [item("com.electron.ollama", 800), item("chat.rocket", 900)],
+    .init(hidden: ["com.example.assistant"], alwaysHidden: ["com.example.chat"]),
+    items: [item("com.example.assistant", 800), item("com.example.chat", 900)],
     hiddenDivider: hiddenDivider, alwaysHiddenDivider: alwaysHiddenDivider, ownBundleIdentifier: own
 )
 expect(
@@ -66,48 +66,48 @@ expect(
 
 // Items are 30 pt wide and the hidden divider starts at 567: an item may end 2 pt into it.
 let atTolerance = HostedSections.updatedSets(
-    .init(), items: [item("com.electron.ollama", 539)],
+    .init(), items: [item("com.example.assistant", 539)],
     hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own
 )
-expect(atTolerance.hidden == ["com.electron.ollama"], "ending at the divider's minX + 2 is left of it")
+expect(atTolerance.hidden == ["com.example.assistant"], "ending at the divider's minX + 2 is left of it")
 let pastTolerance = HostedSections.updatedSets(
-    .init(), items: [item("com.electron.ollama", 539.01)],
+    .init(), items: [item("com.example.assistant", 539.01)],
     hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own
 )
 expect(pastTolerance.hidden.isEmpty, "ending past the divider's minX + 2 isn't left of it")
 
 let split = HostedSections.updatedSets(
-    .init(), items: [item("eu.exelban.Stats", 500), item("eu.exelban.Stats", 900)],
+    .init(), items: [item("com.example.monitor", 500), item("com.example.monitor", 900)],
     hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own
 )
-expect(split.hidden == ["eu.exelban.Stats"], "an app with icons on both sides goes to the leftmost section")
+expect(split.hidden == ["com.example.monitor"], "an app with icons on both sides goes to the leftmost section")
 
 let kept = HostedSections.updatedSets(
-    .init(hidden: ["com.microsoft.teams2"]), items: [item("com.tinyspeck.slackmacgap", 700)],
+    .init(hidden: ["com.example.meetings"]), items: [item("com.example.messenger", 700)],
     hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own
 )
-expect(kept.hidden == ["com.microsoft.teams2"], "an app that isn't drawn keeps its membership")
+expect(kept.hidden == ["com.example.meetings"], "an app that isn't drawn keeps its membership")
 
 let moved = HostedSections.updatedSets(
-    .init(hidden: ["com.microsoft.teams2"]), items: [item("com.microsoft.teams2", 800)],
+    .init(hidden: ["com.example.meetings"]), items: [item("com.example.meetings", 800)],
     hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own
 )
 expect(moved.hidden.isEmpty, "an app seen right of the divider leaves the hidden set")
 
-let candidates: Set = ["chat.rocket", "com.microsoft.teams2", "com.tinyspeck.slackmacgap", own]
-let state = HostedSectionSets(hidden: ["com.microsoft.teams2"], alwaysHidden: ["chat.rocket"])
+let candidates: Set = ["com.example.chat", "com.example.meetings", "com.example.messenger", own]
+let state = HostedSectionSets(hidden: ["com.example.meetings"], alwaysHidden: ["com.example.chat"])
 expect(
     HostedSections.allowlist(
         sets: state, hidesHidden: true, hidesAlwaysHidden: true,
         candidates: candidates, ownBundleIdentifier: own
-    ) == ["com.ikentrock.LynxBar", "com.tinyspeck.slackmacgap"],
+    ) == ["com.example.messenger", "com.ikentrock.LynxBar"],
     "hiding both sections excludes both sets"
 )
 expect(
     HostedSections.allowlist(
         sets: state, hidesHidden: false, hidesAlwaysHidden: true,
         candidates: candidates, ownBundleIdentifier: own
-    ) == ["com.ikentrock.LynxBar", "com.microsoft.teams2", "com.tinyspeck.slackmacgap"],
+    ) == ["com.example.meetings", "com.example.messenger", "com.ikentrock.LynxBar"],
     "showing hidden keeps always-hidden excluded"
 )
 expect(
@@ -176,17 +176,17 @@ expect(!HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Users/x/App
 expect(!HostedSections.isInApplicationsFolder(URL(fileURLWithPath: "/Applications/Tools/Lynx Bar.app")), "a subfolder doesn't")
 
 let agent = "com.apple.MenuBarAgent"
-let covered: Set<String> = ["com.google.Chrome", "com.microsoft.teams2", "com.electron.ollama"]
+let covered: Set<String> = ["com.example.browser", "com.example.meetings", "com.example.assistant"]
 expect(
-    !HostedSections.needsReapply(added: ["com.google.Chrome"], covered: covered, agentBundleIdentifier: agent),
+    !HostedSections.needsReapply(added: ["com.example.browser"], covered: covered, agentBundleIdentifier: agent),
     "a helper of an allowed app doesn't reapply"
 )
 expect(
-    !HostedSections.needsReapply(added: ["com.electron.ollama"], covered: covered, agentBundleIdentifier: agent),
+    !HostedSections.needsReapply(added: ["com.example.assistant"], covered: covered, agentBundleIdentifier: agent),
     "a relaunched hidden app doesn't reapply"
 )
 expect(
-    HostedSections.needsReapply(added: ["com.google.Chrome", "net.new.app"], covered: covered, agentBundleIdentifier: agent),
+    HostedSections.needsReapply(added: ["com.example.browser", "net.new.app"], covered: covered, agentBundleIdentifier: agent),
     "a new app reapplies"
 )
 expect(

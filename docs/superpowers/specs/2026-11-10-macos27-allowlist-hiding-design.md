@@ -12,14 +12,14 @@ and could push the Lynx icon into the system's `«`. Round B (PR #2) switched
 that off (`HostedHidingWidth.isEnabled = false`), so today macOS alone decides
 what is hidden, by what fits, and the owner can't choose.
 
-The owner's habit from macOS 26: a few work apps (Teams, OneDrive, Rocket.Chat,
-Ollama) are kept out of the bar. When one is needed, they **hover over the Lynx
+The owner's habit from macOS 26: a few work apps (chat, meetings, cloud
+storage) are kept out of the bar. When one is needed, they **hover over the Lynx
 icon**, the hidden icons appear in the bar, they click the one they want, and
 the icons get out of the way again. They choose which apps are hidden
 themselves, by **⌘-dragging icons past the divider**, as on macOS 26.
 
 A private macOS 27 facility makes this possible again. A spike on 2026-11-10
-(macOS 27.2, build 26B123) confirmed it.
+on macOS 27.2 confirmed it.
 
 ## The facility: assessment-mode allowlist
 
@@ -50,7 +50,7 @@ Spike results (throwaway script, not in the repo):
 | Check | Result |
 | --- | --- |
 | Activation | completion error `nil` |
-| Target app's icon (Ollama) | gone within 2 s, the app kept running |
+| Target app's icon | gone within 2 s, the app kept running |
 | Other apps and system items | untouched |
 | `invalidate` | everything back at once |
 | An allowlisted app running from `~/Applications` (Lynx Bar) | hidden anyway |
@@ -137,7 +137,7 @@ These would make the feature a failure even if hiding technically works:
   and moves an app between sets only when it sees one of the app's icons on
   the other side of a divider. An app that isn't drawn keeps its membership.
   That covers an app that has quit, or one still under the always-hidden
-  assertion. So Teams stays hidden after it's relaunched. The spike showed
+  assertion. So a hidden app stays hidden after it's relaunched. The spike showed
   icons come back in the same place after `invalidate`, so the order read at
   each hide reflects the owner's ⌘-drags.
 - The sets are stored in `UserDefaults` under new keys, so they apply at
@@ -258,7 +258,7 @@ that should stay visible:
   - Items without a bundle ID never in a set.
   - The allowlist for each section state.
 - **By hand, macOS 27.2, from `/Applications`:**
-  - Teams, OneDrive, Rocket.Chat and Ollama ⌘-dragged left of the divider
+  - A few apps ⌘-dragged left of the divider
     hide when the section hides.
   - Hovering the Lynx icon shows them, a click on one opens its menu, and
     they rehide by the rehide strategy.

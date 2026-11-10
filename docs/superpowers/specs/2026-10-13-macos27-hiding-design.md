@@ -164,7 +164,7 @@ hiding state and doesn't run rehide timers.
 - **Half-display cap.** When the room between the app menus and the visible
   items is wider than half the display, the first hidden items stay in the bar.
   This happens on any display when the active app has short menus and few items
-  are visible. On the 1920 pt test display with Warp in front, about 100 pt of
+  are visible. On the test display with a terminal app in front, about 100 pt of
   hidden items would stay visible. Closing that gap needs a second spacer item,
   which IceMelt tried without success. That's left for later.
 - **Always-hidden.** While both sections are hidden, everything is in the same
