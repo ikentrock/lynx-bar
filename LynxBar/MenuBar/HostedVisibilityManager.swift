@@ -124,6 +124,23 @@ final class HostedVisibilityManager {
         enqueue()
     }
 
+    /// The bundle identifiers of the hidden apps that are being shown now:
+    /// the set of each enabled section that isn't hidden. Rehiding waits
+    /// while one of these apps has a menu, popover or panel open.
+    var revealedBundleIdentifiers: Set<String> {
+        guard let menuBarManager = appState?.menuBarManager else {
+            return []
+        }
+        var revealed = Set<String>()
+        if let section = menuBarManager.section(withName: .hidden), section.isEnabled, !section.isHidden {
+            revealed.formUnion(sets.hidden)
+        }
+        if let section = menuBarManager.section(withName: .alwaysHidden), section.isEnabled, !section.isHidden {
+            revealed.formUnion(sets.alwaysHidden)
+        }
+        return revealed
+    }
+
     /// Lifts the restriction, so every icon is drawn, and drops queued work.
     func clear() {
         generation += 1

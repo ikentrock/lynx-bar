@@ -99,6 +99,23 @@ enum HostedSections {
         return ownSlots.first { !dividerSlots.contains($0) }
     }
 
+    /// One on-screen window, for ``holdsRehide(windows:revealedPIDs:)``.
+    struct WindowSummary: Equatable {
+        let ownerPID: pid_t
+        let layer: Int
+    }
+
+    /// Whether rehiding must wait: a revealed app has a window open above
+    /// the normal level (a menu, popover or panel). Hiding removes the
+    /// app's items, which would close it. Other apps' windows don't count,
+    /// so a stray one can't hold rehiding forever.
+    static func holdsRehide(windows: [WindowSummary], revealedPIDs: Set<pid_t>) -> Bool {
+        guard !revealedPIDs.isEmpty else {
+            return false
+        }
+        return windows.contains { $0.layer > 0 && revealedPIDs.contains($0.ownerPID) }
+    }
+
     /// How our items were found in the item list.
     enum OwnItemMatch: Equatable {
         /// Every window matched its own slot.
