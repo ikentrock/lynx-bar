@@ -351,10 +351,12 @@ extension HIDEventManager {
     private func handleShowOnHover(appState: AppState, screen: NSScreen) {
         // On macOS 27, track entering the Lynx icon even while show on hover
         // isn't allowed, so a pointer that already rests on the icon when it's
-        // allowed again doesn't count as entering it.
+        // allowed again doesn't count as entering it. MenuBarAgent is read
+        // only while the pointer is in the menu bar.
         var didEnterHostedLynxIcon = false
         if #available(macOS 27.0, *), appState.settings.general.isShowOnHoverActive {
-            let isInside = isMouseInsideHostedLynxIcon(appState: appState)
+            let isInside = isMouseInsideMenuBar(appState: appState, screen: screen) &&
+                isMouseInsideHostedLynxIcon(appState: appState)
             didEnterHostedLynxIcon = isInside && !wasMouseInsideHostedLynxIcon
             wasMouseInsideHostedLynxIcon = isInside
         }
