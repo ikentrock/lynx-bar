@@ -121,17 +121,25 @@ final class HostedAllowlist {
     /// The assertion that is active, if any.
     private var current: NSObject?
 
+    /// Bumped by every `apply` and `clear`, so an `apply` that was
+    /// suspended can tell that a later call superseded it.
+    private var generation = 0
+
     /// Activates an assertion allowing `bundleIdentifiers` and system items
     /// 0...255, then invalidates the previous one.
     ///
     /// The order matters: the new assertion applies once the old one is
     /// gone, with no flash. If activation fails, the previous assertion is
-    /// kept.
+    /// kept. If another `apply` or `clear` starts while this one is waiting
+    /// for activation, this one is superseded: its assertion is invalidated
+    /// and it returns without error, leaving the newer call's state alone.
     func apply(allowing bundleIdentifiers: [String]) async throws {
         guard Self.isAvailable else {
             throw Failure.unavailable
         }
         Self.logger.debug("Applying the allowlist with \(bundleIdentifiers.count) apps")
+        generation += 1
+        let myGeneration = generation
         let new = try Self.makeAssertion(allowing: bundleIdentifiers)
         do {
             try await Self.activate(new.assertion, with: new.configuration)
@@ -139,6 +147,11 @@ final class HostedAllowlist {
             Self.logger.error("Allowlist activation failed: \(error)")
             Self.invalidate(new.assertion)
             throw error
+        }
+        guard generation == myGeneration else {
+            Self.logger.debug("Allowlist apply superseded")
+            Self.invalidate(new.assertion)
+            return
         }
         let old = current
         current = new.assertion
@@ -150,6 +163,7 @@ final class HostedAllowlist {
     /// Invalidates the active assertion, if any. Everything is drawn again.
     func clear() {
         Self.logger.debug("Clearing the allowlist (active: \(self.current != nil))")
+        generation += 1
         if let current {
             Self.invalidate(current)
         }
