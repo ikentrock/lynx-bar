@@ -17,10 +17,13 @@ import OSLog
 @available(macOS 27.0, *)
 @MainActor
 final class HostedAllowlist {
+    // `init` methods return a +1 reference (or nil), so their results are
+    // typed `Unmanaged` and taken with `takeRetainedValue()`. A plain
+    // `AnyObject` result would be treated as +0 and leak every object.
     private typealias InitConfigurationFn = @convention(c) (
         AnyObject, Selector, NSArray, NSArray
-    ) -> AnyObject
-    private typealias PlainInitFn = @convention(c) (AnyObject, Selector) -> AnyObject
+    ) -> Unmanaged<AnyObject>?
+    private typealias PlainInitFn = @convention(c) (AnyObject, Selector) -> Unmanaged<AnyObject>?
     private typealias ActivateFn = @convention(c) (
         AnyObject, Selector, AnyObject, @convention(block) (NSError?) -> Void
     ) -> Void
@@ -48,7 +51,7 @@ final class HostedAllowlist {
         }
     }
 
-    private enum Failure: LocalizedError {
+    enum Failure: LocalizedError {
         case unavailable
         case timedOut
 
@@ -76,6 +79,14 @@ final class HostedAllowlist {
 
     /// The reason found at launch, checked once.
     private static let launchReason: String? = {
+        let reason = findLaunchReason()
+        if let reason {
+            logger.info("Hiding through the allowlist is unavailable: \(reason, privacy: .public)")
+        }
+        return reason
+    }()
+
+    private static func findLaunchReason() -> String? {
         guard HostedSections.isInApplicationsFolder(Bundle.main.bundleURL) else {
             return "Move Lynx Bar to the Applications folder to hide items on macOS 27."
         }
@@ -92,7 +103,7 @@ final class HostedAllowlist {
             return unsupported
         }
         return nil
-    }()
+    }
 
     /// The reason found while running, set by `markFailed(_:)`.
     private static var runtimeFailure: String?
@@ -140,11 +151,24 @@ final class HostedAllowlist {
         Self.logger.debug("Applying the allowlist with \(bundleIdentifiers.count) apps")
         generation += 1
         let myGeneration = generation
-        let new = try Self.makeAssertion(allowing: bundleIdentifiers)
+        var new = try Self.makeAssertion(allowing: bundleIdentifiers)
         do {
             try await Self.activate(new.assertion, with: new.configuration)
+        } catch Failure.timedOut where generation == myGeneration {
+            // A slow activation at login or wake shouldn't turn hiding off
+            // for the session: try once more with a fresh assertion.
+            Self.logger.info("Allowlist activation timed out: retrying once")
+            Self.invalidate(new.assertion)
+            new = try Self.makeAssertion(allowing: bundleIdentifiers)
+            do {
+                try await Self.activate(new.assertion, with: new.configuration)
+            } catch {
+                Self.logger.error("Allowlist activation failed again: \(error, privacy: .public)")
+                Self.invalidate(new.assertion)
+                throw error
+            }
         } catch {
-            Self.logger.error("Allowlist activation failed: \(error)")
+            Self.logger.error("Allowlist activation failed: \(error, privacy: .public)")
             Self.invalidate(new.assertion)
             throw error
         }
@@ -181,22 +205,24 @@ final class HostedAllowlist {
                 initConfigurationSelector
             ),
             let initImp = class_getMethodImplementation(assertionClass, initSelector),
-            let rawConfiguration = configurationClass.perform(allocSelector),
-            let rawAssertion = assertionClass.perform(allocSelector)
+            let rawConfiguration = configurationClass.perform(allocSelector)
         else {
             throw Failure.unavailable
         }
-        let configuration = unsafeBitCast(initConfigurationImp, to: InitConfigurationFn.self)(
-            rawConfiguration.takeUnretainedValue(),
-            initConfigurationSelector,
-            NSArray(array: (0...255).map { NSNumber(value: $0) }),
-            NSArray(array: bundleIdentifiers)
-        )
-        let assertion = unsafeBitCast(initImp, to: PlainInitFn.self)(
-            rawAssertion.takeUnretainedValue(),
-            initSelector
-        )
-        guard let assertion = assertion as? NSObject else {
+        // `init` consumes the `alloc` result, so that one is passed unretained.
+        guard
+            let configuration = unsafeBitCast(initConfigurationImp, to: InitConfigurationFn.self)(
+                rawConfiguration.takeUnretainedValue(),
+                initConfigurationSelector,
+                NSArray(array: (0...255).map { NSNumber(value: $0) }),
+                NSArray(array: bundleIdentifiers)
+            )?.takeRetainedValue(),
+            let rawAssertion = assertionClass.perform(allocSelector),
+            let assertion = unsafeBitCast(initImp, to: PlainInitFn.self)(
+                rawAssertion.takeUnretainedValue(),
+                initSelector
+            )?.takeRetainedValue() as? NSObject
+        else {
             throw Failure.unavailable
         }
         return (assertion, configuration)
