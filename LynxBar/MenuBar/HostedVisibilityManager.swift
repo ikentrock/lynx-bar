@@ -57,6 +57,23 @@ final class HostedVisibilityManager {
 
     private var observers = [NSObjectProtocol]()
 
+    /// Observes the running apps, so apps that launch while a section is
+    /// hidden are allowed, background and LSUIElement ones included, which
+    /// `didLaunchApplicationNotification` doesn't report.
+    private var runningAppsObservation: NSKeyValueObservation?
+
+    /// The bundle identifiers of the running apps, as last seen.
+    private var runningBundleIdentifiers: Set<String>
+
+    /// Whether a reapply for new running apps is already scheduled for the
+    /// next run-loop turn.
+    private var isRunningAppsReapplyScheduled = false
+
+    /// The bundle identifiers of the last non-empty read of the agent's
+    /// item list. Under an assertion, an app whose AX read fails would
+    /// otherwise drop out of the allowlist.
+    private var lastListedBundleIdentifiers = Set<String>()
+
     private var ownBundleIdentifier: String { Constants.bundleIdentifier }
 
     init(appState: AppState) {
@@ -72,13 +89,23 @@ final class HostedVisibilityManager {
             Self.logger.debug("Loaded the hidden apps: \(Self.describe(self.sets), privacy: .public)")
         }
 
+        self.runningBundleIdentifiers = Self.bundleIdentifiers(of: NSWorkspace.shared.runningApplications)
+
         let center = NSWorkspace.shared.notificationCenter
-        for name in [NSWorkspace.didWakeNotification, NSWorkspace.didLaunchApplicationNotification] {
-            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+        observers.append(
+            center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated {
                     self?.reapply()
                 }
-            })
+            }
+        )
+        // Not necessarily called on the main thread.
+        runningAppsObservation = NSWorkspace.shared.observe(\.runningApplications, options: [.new, .old]) { [weak self] _, _ in
+            DispatchQueue.main.async { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.runningAppsDidChange()
+                }
+            }
         }
 
         // Sections start hidden, so apply their current states right away.
@@ -92,7 +119,7 @@ final class HostedVisibilityManager {
         enqueue()
     }
 
-    /// Re-applies the current allowlist (after wake).
+    /// Re-applies the current allowlist (after wake, or when apps launch).
     func reapply() {
         enqueue()
     }
@@ -103,6 +130,38 @@ final class HostedVisibilityManager {
         tail = nil
         applied = AppliedState(hidesHidden: false, hidesAlwaysHidden: false)
         allowlist.clear()
+    }
+
+    /// Reapplies, at most once per run-loop turn, when apps were added to
+    /// the running apps. That includes MenuBarAgent relaunching, which drops
+    /// the assertion.
+    private func runningAppsDidChange() {
+        let current = Self.bundleIdentifiers(of: NSWorkspace.shared.runningApplications)
+        let added = current.subtracting(runningBundleIdentifiers)
+        runningBundleIdentifiers = current
+        guard !added.isEmpty, !isStopped, !isRunningAppsReapplyScheduled else {
+            return
+        }
+        isRunningAppsReapplyScheduled = true
+        let isAgent = added.contains(MenuBarAgentLayout.agentBundleIdentifier)
+        Self.logger.debug(
+            "Running apps added \(added.sorted().joined(separator: ", "), privacy: .public): reapplying"
+        )
+        Task { [weak self] in
+            // A relaunched agent needs a moment before it takes assertions.
+            if isAgent {
+                try? await Task.sleep(for: .seconds(1))
+            }
+            guard let self else {
+                return
+            }
+            isRunningAppsReapplyScheduled = false
+            reapply()
+        }
+    }
+
+    private static func bundleIdentifiers(of apps: [NSRunningApplication]) -> Set<String> {
+        Set(apps.compactMap(\.bundleIdentifier))
     }
 
     private func enqueue() {
@@ -164,12 +223,14 @@ final class HostedVisibilityManager {
             // Only logs how our items match in the list, for diagnosis.
             _ = dividerFrames(in: layout)
         }
-        var candidates = Set(layout?.listItems.compactMap(\.bundleIdentifier) ?? [])
-        for app in NSWorkspace.shared.runningApplications where app.activationPolicy != .prohibited {
-            if let id = app.bundleIdentifier {
-                candidates.insert(id)
-            }
+        // Allowing extra apps is harmless, so every running app is allowed,
+        // background ones included: some own status items.
+        let listed = Set(layout?.listItems.compactMap(\.bundleIdentifier) ?? [])
+        if !listed.isEmpty {
+            lastListedBundleIdentifiers = listed
         }
+        var candidates = lastListedBundleIdentifiers
+        candidates.formUnion(Self.bundleIdentifiers(of: NSWorkspace.shared.runningApplications))
         let allowed = HostedSections.allowlist(
             sets: sets,
             hidesHidden: state.hidesHidden,
@@ -237,6 +298,10 @@ final class HostedVisibilityManager {
                 )
             }
             return false
+        }
+        let listed = Set(layout.listItems.compactMap(\.bundleIdentifier))
+        if !listed.isEmpty {
+            lastListedBundleIdentifiers = listed
         }
         sets = HostedSections.updatedSets(
             sets,
@@ -307,6 +372,7 @@ final class HostedVisibilityManager {
             center.removeObserver(observer)
         }
         observers.removeAll()
+        runningAppsObservation = nil
         HostedAllowlist.markFailed(error.localizedDescription)
         clear()
         appState?.menuBarManager.removeHostedVisibility()
