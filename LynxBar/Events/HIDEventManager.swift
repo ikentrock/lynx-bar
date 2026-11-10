@@ -184,6 +184,12 @@ extension HIDEventManager {
             return
         }
 
+        // On macOS 27 a hidden divider fills the empty space, and its own
+        // button already toggles its section. Toggling here too would undo it.
+        if #available(macOS 27.0, *), isMouseInsideOwnHostedItem() {
+            return
+        }
+
         Task {
             if NSEvent.modifierFlags == .control {
                 handleSecondaryContextMenu(appState: appState, screen: screen)
@@ -334,7 +340,7 @@ extension HIDEventManager {
     private func handleShowOnHover(appState: AppState, screen: NSScreen) {
         // Make sure the "ShowOnHover" feature is enabled and allowed.
         guard
-            appState.settings.general.showOnHover,
+            appState.settings.general.isShowOnHoverActive,
             appState.menuBarManager.showOnHoverAllowed
         else {
             return
@@ -384,7 +390,7 @@ extension HIDEventManager {
 
     private func handlePreventShowOnHover(with event: NSEvent, appState: AppState, screen: NSScreen) {
         guard
-            appState.settings.general.showOnHover,
+            appState.settings.general.isShowOnHoverActive,
             !appState.settings.general.isLynxShelfActive
         else {
             return
@@ -508,6 +514,19 @@ extension HIDEventManager {
             }
             return bounds.contains(mouseLocation)
         }
+    }
+
+    /// A Boolean value that indicates whether the mouse pointer is within
+    /// one of Lynx Bar's own items on macOS 27, dividers included.
+    @available(macOS 27.0, *)
+    private func isMouseInsideOwnHostedItem() -> Bool {
+        guard
+            let mouseLocation = MouseHelpers.locationCoreGraphics,
+            let layout = MenuBarAgentLayout.current()
+        else {
+            return false
+        }
+        return layout.ownSlots.contains { $0.contains(mouseLocation) }
     }
 
     /// Returns the frames of the menu bar's items on macOS 27, read from

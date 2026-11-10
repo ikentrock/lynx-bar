@@ -9,9 +9,10 @@ import OSLog
 /// Opens and closes the system's overflow (`«`, "Show Hidden Menu Bar Items")
 /// on macOS 27, where it takes the place of the Lynx Shelf.
 ///
-/// The `«` has no Accessibility actions, so it's clicked with synthesized
+/// The `«` is pressed through Accessibility, which works from macOS 27.2.
+/// Where the press is refused (macOS 27.0), it's clicked with synthesized
 /// mouse events, and the pointer is put back where it was. Once open, the
-/// overflow stays open until the `«` is clicked again, wherever the pointer
+/// overflow stays open until the `«` is pressed again, wherever the pointer
 /// goes.
 @available(macOS 27.0, *)
 @MainActor
@@ -66,6 +67,13 @@ enum SystemOverflow {
             // Nothing is overflowed, so there's nothing to open.
             return !expanded
         }
+        // Only the identified « of macOS 27.2 is known to act on a press. An
+        // older one could accept the press and do nothing, so it's clicked.
+        if layout.chevronIdentifier != nil, let element = layout.chevronElement, AXHelpers.press(element) {
+            let isExpanded = await waitUntilExpanded(expanded)
+            logger.debug("Pressed the overflow button to \(expanded ? "open" : "close", privacy: .public) it; open: \(isExpanded, privacy: .public)")
+            return isExpanded == expanded
+        }
         // The Lynx icon acts on mouse down, so the user's button may still
         // be pressed. A click posted before it's released is lost.
         var waits = 0
@@ -77,6 +85,18 @@ enum SystemOverflow {
         let isExpanded = isExpanded
         logger.debug("Clicked the overflow button to \(expanded ? "open" : "close", privacy: .public) it; open: \(isExpanded, privacy: .public)")
         return isExpanded == expanded
+    }
+
+    /// Waits up to half a second for the overflow to reach the given state,
+    /// and returns whether it's open.
+    private static func waitUntilExpanded(_ expanded: Bool) async -> Bool {
+        for _ in 0..<10 {
+            try? await Task.sleep(for: .milliseconds(50))
+            if isExpanded == expanded {
+                return expanded
+            }
+        }
+        return isExpanded
     }
 
     /// Clicks at the given point and puts the pointer back.

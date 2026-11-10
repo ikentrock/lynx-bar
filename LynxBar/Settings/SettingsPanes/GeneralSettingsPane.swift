@@ -185,7 +185,7 @@ struct GeneralSettingsPane: View {
     private var useLynxShelf: some View {
         if #available(macOS 27.0, *) {
             Toggle("Use Lynx Shelf", isOn: $settings.useLynxShelf)
-                .annotation("Show hidden menu bar items in the menu bar, and open the system's « overflow for those that don't fit. A separate bar isn't supported on macOS 27 yet.")
+                .annotation("Showing hidden menu bar items opens the system's « overflow, where macOS puts the items that don't fit. A separate bar isn't supported on macOS 27 yet.")
         } else {
             Toggle("Use Lynx Shelf", isOn: $settings.useLynxShelf)
                 .annotation("Show hidden menu bar items in a separate bar below the menu bar.")
@@ -217,10 +217,21 @@ struct GeneralSettingsPane: View {
     private var showOptions: some View {
         Toggle("Show on click", isOn: $settings.showOnClick)
             .annotation("Click inside an empty area of the menu bar to show hidden menu bar items.")
-        Toggle("Show on hover", isOn: $settings.showOnHover)
-            .annotation("Hover over an empty area of the menu bar to show hidden menu bar items.")
+        showOnHover
         Toggle("Show on scroll", isOn: $settings.showOnScroll)
             .annotation("Scroll or swipe in the menu bar to show hidden menu bar items.")
+    }
+
+    @ViewBuilder
+    private var showOnHover: some View {
+        if #available(macOS 27.0, *) {
+            Toggle("Show on hover", isOn: .constant(false))
+                .disabled(true)
+                .annotation("Not available on macOS 27, where it would rearrange the menu bar under the pointer. Use the system's « to see hidden menu bar items.")
+        } else {
+            Toggle("Show on hover", isOn: $settings.showOnHover)
+                .annotation("Hover over an empty area of the menu bar to show hidden menu bar items.")
+        }
     }
 
     // MARK: Rehide Options

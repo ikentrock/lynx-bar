@@ -399,7 +399,7 @@ final class ControlItem {
 
             button.image = image
         case .hidden, .alwaysHidden:
-            switch state {
+            switch displayedDividerState {
             case .showSection:
                 switch appState.settings.advanced.sectionDividerStyle {
                 case .noDivider:
@@ -431,12 +431,26 @@ final class ControlItem {
         }
     }
 
+    /// The state a divider is drawn in. On macOS 27, where dividers don't
+    /// fill the free space (see ``HostedHidingWidth/isEnabled``), a divider
+    /// always looks as it does while its section is shown.
+    private var displayedDividerState: HidingState {
+        if #available(macOS 27.0, *), !HostedHidingWidth.isEnabled {
+            return .showSection
+        }
+        return state
+    }
+
     /// Returns the length for the status item in its current state.
     ///
     /// On macOS 27 a divider hides its section by filling the measured room
     /// (see ``HostedHidingWidth``) instead of using `Lengths.expanded`.
     private func currentLength() -> CGFloat {
         if #available(macOS 27.0, *), isSectionDivider, state == .hideSection {
+            guard HostedHidingWidth.isEnabled else {
+                // macOS decides what goes into its overflow.
+                return identifier.length(for: .showSection)
+            }
             if needsHostedReset {
                 return Lengths.standard
             }
