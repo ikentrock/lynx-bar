@@ -225,9 +225,16 @@ struct GeneralSettingsPane: View {
     @ViewBuilder
     private var showOnHover: some View {
         if #available(macOS 27.0, *) {
-            Toggle("Show on hover", isOn: .constant(false))
-                .disabled(true)
-                .annotation("Not available on macOS 27, where it would rearrange the menu bar under the pointer. Use the system's « to see hidden menu bar items.")
+            if let reason = HostedAllowlist.unavailableReason {
+                Toggle("Show on hover", isOn: .constant(false))
+                    .disabled(true)
+                    .annotation {
+                        Text(reason)
+                    }
+            } else {
+                Toggle("Show on hover", isOn: $settings.showOnHover)
+                    .annotation("Hover over the Lynx icon to show hidden menu bar items.")
+            }
         } else {
             Toggle("Show on hover", isOn: $settings.showOnHover)
                 .annotation("Hover over an empty area of the menu bar to show hidden menu bar items.")

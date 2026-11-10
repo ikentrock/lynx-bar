@@ -328,8 +328,14 @@ final class MenuBarSection {
                             return
                         }
                         if NSEvent.mouseLocation.y < screen.visibleFrame.maxY {
-                            Task {
-                                await self.hide()
+                            Task { @MainActor in
+                                // On macOS 27, hiding removes the revealed apps'
+                                // items, which closes an open menu. Wait for it.
+                                if #available(macOS 27.0, *), appState.hidEventManager.isMenuOpen {
+                                    self.startRehideChecks()
+                                } else {
+                                    self.hide()
+                                }
                             }
                         } else {
                             Task {

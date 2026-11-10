@@ -27,6 +27,15 @@ final class HIDEventManager: ObservableObject {
     /// The menu bar's item frames on macOS 27, and when they were read.
     private var hostedItemFrames: (date: Date, frames: [CGRect])?
 
+    /// The Lynx icon's slot in the live menu bar on macOS 27, and when it
+    /// was read.
+    private var hostedLynxIconSlot: (date: Date, slot: CGRect?)?
+
+    /// A Boolean value that indicates whether the mouse pointer was inside
+    /// the Lynx icon on the last mouse move, on macOS 27. Show on hover fires
+    /// only when the pointer enters the icon.
+    private var wasMouseInsideHostedLynxIcon = false
+
     /// A Boolean value that indicates whether the manager is enabled.
     private var isEnabled = false {
         didSet {
@@ -340,6 +349,16 @@ extension HIDEventManager {
     // MARK: Handle Show On Hover
 
     private func handleShowOnHover(appState: AppState, screen: NSScreen) {
+        // On macOS 27, track entering the Lynx icon even while show on hover
+        // isn't allowed, so a pointer that already rests on the icon when it's
+        // allowed again doesn't count as entering it.
+        var didEnterHostedLynxIcon = false
+        if #available(macOS 27.0, *), appState.settings.general.isShowOnHoverActive {
+            let isInside = isMouseInsideHostedLynxIcon(appState: appState)
+            didEnterHostedLynxIcon = isInside && !wasMouseInsideHostedLynxIcon
+            wasMouseInsideHostedLynxIcon = isInside
+        }
+
         // Make sure the "ShowOnHover" feature is enabled and allowed.
         guard
             appState.settings.general.isShowOnHoverActive,
@@ -354,6 +373,17 @@ extension HIDEventManager {
         }
 
         let delay = appState.settings.advanced.showOnHoverDelay
+
+        if #available(macOS 27.0, *) {
+            handleHostedShowOnHover(
+                appState: appState,
+                screen: screen,
+                hiddenSection: hiddenSection,
+                didEnterLynxIcon: didEnterHostedLynxIcon,
+                delay: delay
+            )
+            return
+        }
 
         if hiddenSection.isHidden {
             guard isMouseInsideEmptyMenuBarSpace(appState: appState, screen: screen) else {
@@ -380,6 +410,56 @@ extension HIDEventManager {
                 guard
                     !isMouseInsideMenuBar(appState: appState, screen: screen),
                     !isMouseInsideLynxShelf(appState: appState)
+                else {
+                    return
+                }
+                hiddenSection.hide()
+            }
+        }
+    }
+
+    /// Show on hover on macOS 27, where it works on the Lynx icon only.
+    ///
+    /// The section shows when the pointer enters the Lynx icon, so the icon
+    /// shows it at most once per entry, even if a click hides it again while
+    /// the pointer rests on it. It hides when the pointer leaves the menu
+    /// bar, as on macOS 26, but not while a menu is open: hiding removes the
+    /// revealed apps' items, which would close the menu.
+    @available(macOS 27.0, *)
+    private func handleHostedShowOnHover(
+        appState: AppState,
+        screen: NSScreen,
+        hiddenSection: MenuBarSection,
+        didEnterLynxIcon: Bool,
+        delay: TimeInterval
+    ) {
+        if hiddenSection.isHidden {
+            guard didEnterLynxIcon else {
+                return
+            }
+            Task {
+                try await Task.sleep(for: .seconds(delay))
+                // Make sure the mouse is still inside.
+                guard isMouseInsideHostedLynxIcon(appState: appState) else {
+                    return
+                }
+                hiddenSection.show()
+            }
+        } else {
+            guard
+                !isMouseInsideMenuBar(appState: appState, screen: screen),
+                !isMouseInsideLynxShelf(appState: appState),
+                !isMenuOpen
+            else {
+                return
+            }
+            Task {
+                try await Task.sleep(for: .seconds(delay))
+                // Make sure the mouse is still outside, and no menu opened.
+                guard
+                    !isMouseInsideMenuBar(appState: appState, screen: screen),
+                    !isMouseInsideLynxShelf(appState: appState),
+                    !isMenuOpen
                 else {
                     return
                 }
@@ -552,6 +632,49 @@ extension HIDEventManager {
         )
         hostedItemFrames = (.now, frames)
         return frames
+    }
+
+    /// A Boolean value that indicates whether the mouse pointer is within
+    /// the Lynx icon's slot in the live menu bar on macOS 27.
+    ///
+    /// The slot is the one of our own slots that matches the Lynx icon's
+    /// window by width and then by position: the windows follow another of
+    /// the agent's windows, and can be well off in x. It's read from
+    /// `MenuBarAgent` at most every 250 ms, since this runs on mouse moves.
+    @available(macOS 27.0, *)
+    func isMouseInsideHostedLynxIcon(appState: AppState) -> Bool {
+        guard
+            let mouseLocation = MouseHelpers.locationCoreGraphics,
+            let slot = currentHostedLynxIconSlot(appState: appState)
+        else {
+            return false
+        }
+        return slot.contains(mouseLocation)
+    }
+
+    /// Returns the Lynx icon's slot in the live menu bar on macOS 27, read
+    /// at most every 250 ms. A failed read is cached too.
+    @available(macOS 27.0, *)
+    private func currentHostedLynxIconSlot(appState: AppState) -> CGRect? {
+        if let hostedLynxIconSlot, Date.now.timeIntervalSince(hostedLynxIconSlot.date) < 0.25 {
+            return hostedLynxIconSlot.slot
+        }
+        var slot: CGRect?
+        if
+            let lynxIconFrame = appState.menuBarManager.section(withName: .visible)?.controlItem.frame,
+            let layout = MenuBarAgentLayout.current()
+        {
+            slot = HostedHidingWidth.slot(forWindowFrame: lynxIconFrame, in: layout.ownSlots)
+        }
+        hostedLynxIconSlot = (.now, slot)
+        return slot
+    }
+
+    /// A Boolean value that indicates whether a menu is open, that is,
+    /// whether an on-screen window is at the pop-up menu level.
+    var isMenuOpen: Bool {
+        let menuLevel = CGWindowLevelForKey(.popUpMenuWindow)
+        return WindowInfo.createWindows(option: .onScreen).contains { $0.layer == Int(menuLevel) }
     }
 
     /// A Boolean value that indicates whether the mouse pointer is within
