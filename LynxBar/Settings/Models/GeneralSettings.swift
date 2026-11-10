@@ -68,13 +68,13 @@ final class GeneralSettings: ObservableObject {
 
     /// A Boolean value that indicates whether show on hover is in effect.
     ///
-    /// Always `false` on macOS 27, where the hidden divider is the empty
-    /// space in the middle of the bar: showing the section on hover rearranges
-    /// the whole bar under the pointer, and from macOS 27.2 the system already
-    /// opens its own overflow (`«`) on hover. The stored setting is kept.
+    /// On macOS 27 it needs MenuBarAgent's allowlist, and it works on the
+    /// Lynx icon only. Without the allowlist, the hidden divider is the empty
+    /// space in the middle of the bar, and showing the section on hover would
+    /// rearrange the whole bar under the pointer. The stored setting is kept.
     var isShowOnHoverActive: Bool {
         if #available(macOS 27.0, *) {
-            return false
+            return showOnHover && HostedAllowlist.isAvailable
         }
         return showOnHover
     }
