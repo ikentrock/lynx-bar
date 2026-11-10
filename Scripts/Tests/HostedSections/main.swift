@@ -41,6 +41,40 @@ expect(
     withAH.alwaysHidden == ["com.example.chat"] && !withAH.hidden.contains("com.example.chat"),
     "left of the always-hidden divider is always-hidden only"
 )
+expect(
+    withAH.hidden == ["com.example.assistant", "com.example.meetings"],
+    "between the dividers is hidden"
+)
+
+let toHidden = HostedSections.updatedSets(
+    .init(alwaysHidden: ["com.example.meetings"]), items: [item("com.example.meetings", 400)],
+    hiddenDivider: hiddenDivider, alwaysHiddenDivider: alwaysHiddenDivider, ownBundleIdentifier: own
+)
+expect(
+    toHidden.hidden == ["com.example.meetings"] && toHidden.alwaysHidden.isEmpty,
+    "an always-hidden app seen between the dividers moves to hidden"
+)
+let toNeither = HostedSections.updatedSets(
+    .init(hidden: ["com.example.assistant"], alwaysHidden: ["com.example.chat"]),
+    items: [item("com.example.assistant", 800), item("com.example.chat", 900)],
+    hiddenDivider: hiddenDivider, alwaysHiddenDivider: alwaysHiddenDivider, ownBundleIdentifier: own
+)
+expect(
+    toNeither.hidden.isEmpty && toNeither.alwaysHidden.isEmpty,
+    "hidden and always-hidden apps seen right of both dividers leave their sets"
+)
+
+// Items are 30 pt wide and the hidden divider starts at 567: an item may end 2 pt into it.
+let atTolerance = HostedSections.updatedSets(
+    .init(), items: [item("com.example.assistant", 539)],
+    hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own
+)
+expect(atTolerance.hidden == ["com.example.assistant"], "ending at the divider's minX + 2 is left of it")
+let pastTolerance = HostedSections.updatedSets(
+    .init(), items: [item("com.example.assistant", 539.01)],
+    hiddenDivider: hiddenDivider, alwaysHiddenDivider: nil, ownBundleIdentifier: own
+)
+expect(pastTolerance.hidden.isEmpty, "ending past the divider's minX + 2 isn't left of it")
 
 let split = HostedSections.updatedSets(
     .init(), items: [item("com.example.monitor", 500), item("com.example.monitor", 900)],
@@ -84,15 +118,6 @@ expect(
     "our own bundle ID is always allowed"
 )
 
-// Measured on 27.2: Lynx icon 33 pt, hidden divider 16 pt; windows sit 56 pt right of the live slots.
-expect(
-    HostedSections.lynxIconSlot(
-        ownSlots: [CGRect(x: 1098, y: 0, width: 33, height: 30), CGRect(x: 1347, y: 0, width: 16, height: 30)],
-        dividerWindowFrames: [CGRect(x: 1403, y: 1050, width: 16, height: 30)]
-    ) == CGRect(x: 1098, y: 0, width: 33, height: 30),
-    "the Lynx icon is the own slot that matches no divider"
-)
-
 // Our items in the list, in their usual order: always-hidden divider, hidden divider, Lynx icon.
 let ahSlot = CGRect(x: 1300, y: 0, width: 16, height: 30)
 let hSlot = CGRect(x: 1371, y: 0, width: 16, height: 30)
@@ -118,6 +143,14 @@ expect(
 expect(
     HostedSections.ownItemSlots(matched: [nil, iconSlot], ownSlots: [hSlot, ahSlot, iconSlot]) == nil,
     "the order needs one list item per section"
+)
+expect(
+    HostedSections.ownItemSlots(matched: [hSlot, hSlot, iconSlot], ownSlots: [ahSlot, hSlot, iconSlot]) == nil,
+    "two items matched to the same slot: nil"
+)
+expect(
+    HostedSections.ownItemSlots(matched: [nil, hSlot, hSlot], ownSlots: [ahSlot, hSlot, iconSlot]) == nil,
+    "a duplicate match with one unmatched: nil"
 )
 
 // Rehiding waits for windows above the normal level of the revealed apps only.
