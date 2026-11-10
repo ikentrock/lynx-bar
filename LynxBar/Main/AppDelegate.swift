@@ -59,6 +59,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        // Draw every icon again. The assertion would also die with the
+        // process, but don't rely on that.
+        if
+            #available(macOS 27.0, *),
+            let manager = appState.menuBarManager.hostedVisibility as? HostedVisibilityManager
+        {
+            manager.clear()
+        }
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
         Logger.default.debug("Handling reopen")
         openSettingsWindow()

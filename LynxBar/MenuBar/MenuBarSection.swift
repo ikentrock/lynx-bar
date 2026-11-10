@@ -214,6 +214,8 @@ final class MenuBarSection {
             }
         }
 
+        menuBarManager.hostedSectionsDidChange()
+
         startRehideChecks()
         appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
 
@@ -267,6 +269,8 @@ final class MenuBarSection {
         case .alwaysHidden:
             controlItem.state = .hideSection
         }
+
+        menuBarManager.hostedSectionsDidChange()
 
         stopRehideChecks()
         appState?.itemManager.requestHostedMeasurement(after: .milliseconds(600))
