@@ -162,11 +162,20 @@ final class HostedAllowlist {
             new = try Self.makeAssertion(allowing: bundleIdentifiers)
             do {
                 try await Self.activate(new.assertion, with: new.configuration)
+            } catch Failure.timedOut where generation != myGeneration {
+                Self.logger.debug("Allowlist activation timed out after being superseded")
+                Self.invalidate(new.assertion)
+                return
             } catch {
                 Self.logger.error("Allowlist activation failed again: \(error, privacy: .public)")
                 Self.invalidate(new.assertion)
                 throw error
             }
+        } catch Failure.timedOut {
+            // Superseded while waiting: the newer call owns the state.
+            Self.logger.debug("Allowlist activation timed out after being superseded")
+            Self.invalidate(new.assertion)
+            return
         } catch {
             Self.logger.error("Allowlist activation failed: \(error, privacy: .public)")
             Self.invalidate(new.assertion)
