@@ -76,6 +76,33 @@ enum HostedShelfLayout {
         return elapsed >= minimumWait && !present.isEmpty && present == previous
     }
 
+    /// The fraction of pixels that differ between two images of the same
+    /// size, `bytesPerPixel` bytes each: a pixel differs if any of its bytes
+    /// differs by more than `tolerance`. Images of different sizes differ
+    /// entirely.
+    static func changedFraction(_ old: Data, _ new: Data, bytesPerPixel: Int, tolerance: UInt8) -> Double {
+        guard old.count == new.count, bytesPerPixel > 0, old.count >= bytesPerPixel else {
+            return 1
+        }
+        let pixelCount = old.count / bytesPerPixel
+        var changed = 0
+        old.withUnsafeBytes { oldBytes in
+            new.withUnsafeBytes { newBytes in
+                for pixel in 0..<pixelCount {
+                    let start = pixel * bytesPerPixel
+                    for byte in start..<(start + bytesPerPixel) {
+                        let difference = abs(Int(oldBytes[byte]) - Int(newBytes[byte]))
+                        if difference > Int(tolerance) {
+                            changed += 1
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        return Double(changed) / Double(pixelCount)
+    }
+
     /// The pixel rectangle of `frame` in an image of a window at
     /// `windowBounds`, `scale` pixels per point, or `nil` if it falls
     /// outside the image.

@@ -48,8 +48,23 @@ final class HostedShelf: ObservableObject {
     /// settled when some apps aren't drawn (they may own no icon).
     private static let minimumDrawWait: Duration = .milliseconds(300)
 
-    /// How long to let the agent finish drawing once its items are listed.
+    /// How long to let the agent start drawing once its items are listed.
     private static let renderDelay: Duration = .milliseconds(120)
+
+    /// How far apart two captures of the bar must match for it to count as
+    /// still. The agent fades and slides revealed icons in after listing
+    /// them, and a capture taken meanwhile crops parts of their neighbours.
+    private static let stillInterval: Duration = .milliseconds(80)
+
+    /// How much a pixel's channels may differ and still match.
+    private static let stillTolerance: UInt8 = 8
+
+    /// The fraction of pixels that may change between captures of a still
+    /// bar. Revealed icons sliding in change far more.
+    private static let stillFraction = 0.01
+
+    /// How long to wait for the bar to stop changing.
+    private static let stillTimeout: Duration = .milliseconds(1200)
 
     /// How long to wait for a pressed icon's menu or panel to appear
     /// before clicking it instead.
@@ -146,9 +161,8 @@ final class HostedShelf: ObservableObject {
             try? await Task.sleep(for: .milliseconds(50))
         }
         try? await Task.sleep(for: Self.renderDelay)
+        let captures = await Self.captureWhenStill()
         windows = Self.readAgentWindows()
-
-        let captures = Self.captureAgentWindows()
         let candidates = windows.map { window in
             let items = window.icons.map {
                 HostedItem(bundleIdentifier: $0.bundleIdentifier, frame: $0.frame, isOwn: $0.isOwn)
@@ -373,6 +387,54 @@ final class HostedShelf: ObservableObject {
     private struct Capture {
         let image: CGImage
         let bounds: CGRect
+
+        /// The image's pixels, to tell whether the window changed.
+        var pixels: Data? {
+            image.dataProvider?.data as Data?
+        }
+    }
+
+    /// Whether two captures of the agent's windows match. Some icons draw
+    /// live values (a clock, meters), so a few changed pixels still match.
+    private static func isStill(_ old: [Capture], _ new: [Capture]) -> Bool {
+        guard old.count == new.count, !new.isEmpty else {
+            return false
+        }
+        return zip(old, new).allSatisfy { old, new in
+            guard
+                let oldPixels = old.pixels,
+                let newPixels = new.pixels,
+                old.image.bytesPerRow == new.image.bytesPerRow
+            else {
+                return false
+            }
+            let bytesPerPixel = max(new.image.bitsPerPixel / 8, 1)
+            let changed = HostedShelfLayout.changedFraction(
+                oldPixels,
+                newPixels,
+                bytesPerPixel: bytesPerPixel,
+                tolerance: stillTolerance
+            )
+            return changed <= stillFraction
+        }
+    }
+
+    /// Captures the agent's windows once two captures in a row match, or
+    /// the last capture if the bar keeps changing.
+    private static func captureWhenStill() async -> [Capture] {
+        let start = ContinuousClock.now
+        var previous = captureAgentWindows()
+        while ContinuousClock.now - start < stillTimeout {
+            try? await Task.sleep(for: stillInterval)
+            let current = captureAgentWindows()
+            if isStill(previous, current) {
+                logger.debug("The bar was still after \(ContinuousClock.now - start, privacy: .public)")
+                return current
+            }
+            previous = current
+        }
+        logger.debug("The bar kept changing: using its last capture")
+        return previous
     }
 
     /// Captures every window of the agent.

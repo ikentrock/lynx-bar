@@ -115,4 +115,28 @@ expect(
     "a frame outside the image has no pixels"
 )
 
+// Changed pixels
+
+let still = Data([10, 10, 10, 255, 20, 20, 20, 255, 30, 30, 30, 255, 40, 40, 40, 255])
+var oneChanged = still
+oneChanged[4] = 200
+var slightlyChanged = still
+slightlyChanged[0] = 14
+expect(
+    HostedShelfLayout.changedFraction(still, still, bytesPerPixel: 4, tolerance: 8) == 0,
+    "identical images have no changed pixels"
+)
+expect(
+    HostedShelfLayout.changedFraction(still, oneChanged, bytesPerPixel: 4, tolerance: 8) == 0.25,
+    "one changed pixel of four is a quarter"
+)
+expect(
+    HostedShelfLayout.changedFraction(still, slightlyChanged, bytesPerPixel: 4, tolerance: 8) == 0,
+    "differences within the tolerance don't count"
+)
+expect(
+    HostedShelfLayout.changedFraction(still, still.prefix(8), bytesPerPixel: 4, tolerance: 8) == 1,
+    "images of different sizes differ entirely"
+)
+
 finishTests("HostedShelfLayout")

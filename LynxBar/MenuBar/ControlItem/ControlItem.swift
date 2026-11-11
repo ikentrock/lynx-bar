@@ -547,6 +547,11 @@ final class ControlItem {
                     let section = menuBarManager.section(withName: sectionName),
                     section.isEnabled
                 {
+                    // Show on hover may have shown the section as the
+                    // pointer reached the icon to click it.
+                    if !section.isHidden, appState?.hidEventManager.hasJustShownOnHover == true {
+                        return
+                    }
                     section.toggle()
                 }
             }

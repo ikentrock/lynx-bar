@@ -244,6 +244,13 @@ final class LynxShelfPanel: NSPanel {
         orderFrontRegardless()
     }
 
+    /// Whether the panel is getting ready to show a section and isn't on
+    /// screen yet. On macOS 27 this takes about a second while the icons
+    /// are captured.
+    var isPreparing: Bool {
+        currentSection != nil && !isVisible
+    }
+
     /// Hides the panel.
     func hide() {
         if

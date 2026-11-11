@@ -35,6 +35,23 @@ final class HIDEventManager: ObservableObject {
     /// was read.
     private var hostedRehideHold: (date: Date, holds: Bool)?
 
+    /// When show on hover last showed the hidden section on macOS 27.
+    private var hostedShowOnHoverDate: Date?
+
+    /// How long after show on hover a click on the Lynx icon keeps the
+    /// section shown.
+    private static let clickAfterShowOnHoverWindow: TimeInterval = 1
+
+    /// Whether show on hover showed the hidden section just now, on macOS
+    /// 27. The pointer rests on the Lynx icon to click it, so hovering shows
+    /// the section and the click would hide it again: the click keeps it.
+    var hasJustShownOnHover: Bool {
+        guard let date = hostedShowOnHoverDate else {
+            return false
+        }
+        return Date.now.timeIntervalSince(date) < Self.clickAfterShowOnHoverWindow
+    }
+
     /// A Boolean value that indicates whether the mouse pointer was inside
     /// the Lynx icon on the last mouse move, on macOS 27. Show on hover fires
     /// only when the pointer enters the icon.
@@ -446,15 +463,19 @@ extension HIDEventManager {
             Task {
                 try await Task.sleep(for: .seconds(delay))
                 // Make sure the mouse is still inside.
-                guard isMouseInsideHostedLynxIcon(appState: appState) else {
+                guard isMouseInsideHostedLynxIcon(appState: appState), hiddenSection.isHidden else {
                     return
                 }
                 hiddenSection.show()
+                hostedShowOnHoverDate = .now
             }
         } else {
+            // The pointer heads for the shelf while it's getting ready, and
+            // isn't inside it until it shows.
             guard
                 !isMouseInsideMenuBar(appState: appState, screen: screen),
                 !isMouseInsideLynxShelf(appState: appState),
+                !appState.menuBarManager.shelfPanel.isPreparing,
                 !holdsHostedRehide(appState: appState)
             else {
                 return
@@ -466,6 +487,7 @@ extension HIDEventManager {
                 guard
                     !isMouseInsideMenuBar(appState: appState, screen: screen),
                     !isMouseInsideLynxShelf(appState: appState),
+                    !appState.menuBarManager.shelfPanel.isPreparing,
                     !holdsHostedRehide(appState: appState)
                 else {
                     return
