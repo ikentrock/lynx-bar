@@ -99,8 +99,9 @@ enum SystemOverflow {
         return isExpanded
     }
 
-    /// Clicks at the given point and puts the pointer back.
-    private static func click(at point: CGPoint, hidEventManager: HIDEventManager) async {
+    /// Clicks at the given point and puts the pointer back. The Lynx
+    /// Shelf also uses it, for icons that ignore an Accessibility press.
+    static func click(at point: CGPoint, hidEventManager: HIDEventManager) async {
         guard
             let source = CGEventSource(stateID: .hidSystemState),
             let savedLocation = MouseHelpers.locationCoreGraphics

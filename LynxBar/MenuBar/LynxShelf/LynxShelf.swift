@@ -22,6 +22,21 @@ final class LynxShelfPanel: NSPanel {
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
 
+    /// The shelf's icons on macOS 27. Stored as `AnyObject` because of
+    /// availability: use ``hostedShelf``.
+    private var hostedShelfStorage: AnyObject?
+
+    /// The shelf's icons on macOS 27.
+    @available(macOS 27.0, *)
+    private var hostedShelf: HostedShelf {
+        if let shelf = hostedShelfStorage as? HostedShelf {
+            return shelf
+        }
+        let shelf = HostedShelf()
+        hostedShelfStorage = shelf
+        return shelf
+    }
+
     /// Creates a new Lynx Shelf panel.
     init() {
         super.init(
@@ -74,7 +89,18 @@ final class LynxShelfPanel: NSPanel {
             }
             .store(in: &c)
 
-        if let controlItem = appState?.menuBarManager.controlItem(withName: .hidden) {
+        if #available(macOS 27.0, *) {
+            // Our status item windows don't follow the bar on macOS 27, and
+            // revealing items for a capture moves them: ask the system
+            // whether it hides the menu bar instead.
+            appState?.menuBarManager.$isMenuBarHiddenBySystem
+                .removeDuplicates()
+                .filter { $0 }
+                .sink { [weak self] _ in
+                    self?.hide()
+                }
+                .store(in: &c)
+        } else if let controlItem = appState?.menuBarManager.controlItem(withName: .hidden) {
             // Use the hidden control item's frame to determine if the menu bar
             // is hidden. Hide the panel if so.
             controlItem.$frame
@@ -139,6 +165,16 @@ final class LynxShelfPanel: NSPanel {
                 let lowerBound = screen.frame.minX
                 let upperBound = screen.frame.maxX - frame.width
 
+                // Items can't be listed on macOS 27: use the Lynx icon's own
+                // window.
+                if
+                    #available(macOS 27.0, *),
+                    lowerBound <= upperBound,
+                    let iconFrame = appState.menuBarManager.section(withName: .visible)?.controlItem.frame
+                {
+                    return CGPoint(x: (iconFrame.midX - frame.width / 2).clamped(to: lowerBound...upperBound), y: originY)
+                }
+
                 guard
                     lowerBound <= upperBound,
                     let controlItem = appState.itemManager.itemCache.managedItems.first(matching: .visibleControlItem),
@@ -168,22 +204,31 @@ final class LynxShelfPanel: NSPanel {
         appState.navigationState.isLynxShelfPresented = true
         currentSection = section
 
-        let cacheTask = Task(timeout: .seconds(1)) {
-            await appState.itemManager.cacheItemsIfNeeded()
-            await appState.imageCache.updateCache()
-        }
+        if #available(macOS 27.0, *) {
+            await hostedShelf.refresh(section: section, appState: appState)
+            // The section may have been hidden while capturing.
+            guard currentSection == section else {
+                return
+            }
+        } else {
+            let cacheTask = Task(timeout: .seconds(1)) {
+                await appState.itemManager.cacheItemsIfNeeded()
+                await appState.imageCache.updateCache()
+            }
 
-        do {
-            try await cacheTask.value
-        } catch {
-            Logger.default.error("Cache update failed when showing LynxShelfPanel - \(error)")
+            do {
+                try await cacheTask.value
+            } catch {
+                Logger.default.error("Cache update failed when showing LynxShelfPanel - \(error)")
+            }
         }
 
         contentView = LynxShelfHostingView(
             appState: appState,
             colorManager: colorManager,
             screen: screen,
-            section: section
+            section: section,
+            hostedShelf: hostedShelfStorage
         )
 
         updateOrigin(for: screen)
@@ -227,7 +272,8 @@ private final class LynxShelfHostingView: NSHostingView<LynxShelfContentView> {
         appState: AppState,
         colorManager: LynxShelfColorManager,
         screen: NSScreen,
-        section: MenuBarSection.Name
+        section: MenuBarSection.Name,
+        hostedShelf: AnyObject?
     ) {
         let rootView = LynxShelfContentView(
             appState: appState,
@@ -236,7 +282,8 @@ private final class LynxShelfHostingView: NSHostingView<LynxShelfContentView> {
             imageCache: appState.imageCache,
             menuBarManager: appState.menuBarManager,
             screen: screen,
-            section: section
+            section: section,
+            hostedShelf: hostedShelf
         )
         super.init(rootView: rootView)
     }
@@ -269,6 +316,9 @@ private struct LynxShelfContentView: View {
 
     let screen: NSScreen
     let section: MenuBarSection.Name
+
+    /// The shelf's icons on macOS 27, a ``HostedShelf``.
+    let hostedShelf: AnyObject?
 
     private var items: [MenuBarItem] {
         itemManager.itemCache.managedItems(for: section)
@@ -361,6 +411,14 @@ private struct LynxShelfContentView: View {
         } else if menuBarManager.isMenuBarHiddenBySystemUserDefaults {
             Text("Lynx Bar cannot display menu bar items for automatically hidden menu bars")
                 .padding(.horizontal, 10)
+        } else if #available(macOS 27.0, *), let hostedShelf = hostedShelf as? HostedShelf {
+            HostedShelfContentView(
+                appState: appState,
+                shelf: hostedShelf,
+                screen: screen,
+                section: section,
+                frame: frame
+            )
         } else if let message = itemManager.itemsUnavailableMessage {
             Text(message)
                 .padding(.horizontal, 10)
@@ -455,7 +513,7 @@ private struct LynxShelfItemView: View {
                 .contentShape(Rectangle())
                 .overlay {
                     LynxShelfItemClickView(
-                        item: item,
+                        toolTip: item.displayName,
                         leftClickAction: leftClickAction,
                         rightClickAction: rightClickAction
                     )
@@ -471,8 +529,6 @@ private struct LynxShelfItemView: View {
 
 private struct LynxShelfItemClickView: NSViewRepresentable {
     private final class Represented: NSView {
-        let item: MenuBarItem
-
         let leftClickAction: () -> Void
         let rightClickAction: () -> Void
 
@@ -483,15 +539,14 @@ private struct LynxShelfItemClickView: NSViewRepresentable {
         private var lastRightMouseDownLocation = CGPoint.zero
 
         init(
-            item: MenuBarItem,
+            toolTip: String,
             leftClickAction: @escaping () -> Void,
             rightClickAction: @escaping () -> Void
         ) {
-            self.item = item
             self.leftClickAction = leftClickAction
             self.rightClickAction = rightClickAction
             super.init(frame: .zero)
-            self.toolTip = item.displayName
+            self.toolTip = toolTip
         }
 
         @available(*, unavailable)
@@ -534,18 +589,120 @@ private struct LynxShelfItemClickView: NSViewRepresentable {
         }
     }
 
-    let item: MenuBarItem
+    let toolTip: String
 
     let leftClickAction: () -> Void
     let rightClickAction: () -> Void
 
     func makeNSView(context: Context) -> NSView {
         Represented(
-            item: item,
+            toolTip: toolTip,
             leftClickAction: leftClickAction,
             rightClickAction: rightClickAction
         )
     }
 
     func updateNSView(_ nsView: NSView, context: Context) { }
+}
+
+// MARK: - HostedShelfContentView
+
+/// The shelf's icons on macOS 27.
+@available(macOS 27.0, *)
+private struct HostedShelfContentView: View {
+    @ObservedObject var appState: AppState
+    @ObservedObject var shelf: HostedShelf
+    @State private var scrollIndicatorsFlashTrigger = 0
+
+    let screen: NSScreen
+    let section: MenuBarSection.Name
+    let frame: CGRect
+
+    var body: some View {
+        switch shelf.state {
+        case .idle, .loading:
+            HStack {
+                Text("Loading menu bar items…")
+                ProgressView()
+                    .controlSize(.small)
+            }
+            .padding(.horizontal, 10)
+        case .failed:
+            Text("Unable to display menu bar items")
+                .padding(.horizontal, 10)
+        case .ready where shelf.icons.isEmpty:
+            Text("No hidden menu bar items")
+                .padding(.horizontal, 10)
+        case .ready:
+            ScrollView(.horizontal) {
+                HStack(spacing: 0) {
+                    ForEach(shelf.icons) { icon in
+                        HostedShelfItemView(appState: appState, shelf: shelf, icon: icon, section: section)
+                    }
+                }
+            }
+            .environment(\.isScrollEnabled, frame.width == screen.frame.width)
+            .defaultScrollAnchor(.trailing)
+            .scrollIndicatorsFlash(trigger: scrollIndicatorsFlashTrigger)
+            .task {
+                scrollIndicatorsFlashTrigger += 1
+            }
+        }
+    }
+}
+
+// MARK: - HostedShelfItemView
+
+/// One icon of the shelf on macOS 27.
+@available(macOS 27.0, *)
+private struct HostedShelfItemView: View {
+    let appState: AppState
+    let shelf: HostedShelf
+    let icon: HostedShelf.Icon
+    let section: MenuBarSection.Name
+
+    /// The icons only take a press, so both buttons do the same.
+    private var clickAction: () -> Void {
+        return { [weak appState, weak shelf] in
+            guard let appState, let shelf else {
+                return
+            }
+            appState.menuBarManager.section(withName: section)?.hide()
+            let entry = icon.entry
+            Task {
+                await shelf.open(entry, appState: appState)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var label: some View {
+        if let image = icon.image {
+            Image(nsImage: image)
+        } else if let appIcon = icon.appIcon {
+            Image(nsImage: appIcon)
+                .resizable()
+                .frame(width: 18, height: 18)
+                .padding(.horizontal, 6)
+                .frame(maxHeight: .infinity)
+        } else {
+            Text(icon.displayName)
+                .padding(.horizontal, 6)
+        }
+    }
+
+    var body: some View {
+        label
+            .contentShape(Rectangle())
+            .overlay {
+                LynxShelfItemClickView(
+                    toolTip: icon.displayName,
+                    leftClickAction: clickAction,
+                    rightClickAction: clickAction
+                )
+            }
+            .accessibilityLabel(icon.displayName)
+            .accessibilityAction(named: "left click", clickAction)
+            .accessibilityAction(named: "right click", clickAction)
+    }
 }

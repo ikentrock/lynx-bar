@@ -64,6 +64,12 @@ final class HostedVisibilityManager {
     /// Set when applying failed. Nothing runs after that.
     private var isStopped = false
 
+    /// Apps drawn for a while although their section is hidden: for the
+    /// Lynx Shelf to capture their icons, or to press one. Keyed by the
+    /// token each reveal returns, so overlapping reveals don't end each
+    /// other.
+    private var temporaryReveals = [UUID: Set<String>]()
+
     private var observers = [NSObjectProtocol]()
 
     /// Observes the running apps, so apps that launch while a section is
@@ -141,20 +147,60 @@ final class HostedVisibilityManager {
     }
 
     /// The bundle identifiers of the hidden apps that are being shown now:
-    /// the set of each enabled section that isn't hidden. Rehiding waits
-    /// while one of these apps has a menu, popover or panel open.
+    /// the set of each enabled section that is shown in the bar. Rehiding
+    /// waits while one of these apps has a menu, popover or panel open.
     var revealedBundleIdentifiers: Set<String> {
         guard let menuBarManager = appState?.menuBarManager else {
             return []
         }
         var revealed = Set<String>()
-        if let section = menuBarManager.section(withName: .hidden), section.isEnabled, !section.isHidden {
+        if let section = menuBarManager.section(withName: .hidden), !Self.hides(section) {
             revealed.formUnion(sets.hidden)
         }
-        if let section = menuBarManager.section(withName: .alwaysHidden), section.isEnabled, !section.isHidden {
+        if let section = menuBarManager.section(withName: .alwaysHidden), !Self.hides(section) {
             revealed.formUnion(sets.alwaysHidden)
         }
         return revealed
+    }
+
+    /// The apps the owner put in a hiding section, or none for the visible
+    /// one.
+    func bundleIdentifiers(in section: MenuBarSection.Name) -> Set<String> {
+        switch section {
+        case .visible: []
+        case .hidden: sets.hidden
+        case .alwaysHidden: sets.alwaysHidden
+        }
+    }
+
+    /// Draws `bundleIdentifiers` in the bar even if their section is
+    /// hidden, until ``endTemporaryReveal(_:)`` is called with the returned
+    /// token. Returns once the allowlist was applied. Runs in turn with the
+    /// other jobs, and doesn't change the stored sets.
+    func beginTemporaryReveal(_ bundleIdentifiers: Set<String>) async -> UUID {
+        let token = UUID()
+        await enqueue { manager in
+            manager.temporaryReveals[token] = bundleIdentifiers
+        }?.value
+        return token
+    }
+
+    /// Ends a reveal that ``beginTemporaryReveal(_:)`` started, and hides
+    /// its apps again unless another reveal still shows them. Returns once
+    /// the allowlist was applied.
+    func endTemporaryReveal(_ token: UUID) async {
+        await enqueue { manager in
+            manager.temporaryReveals[token] = nil
+        }?.value
+        // Also forget the reveal if the job was dropped by `clear()`.
+        temporaryReveals[token] = nil
+    }
+
+    /// Whether the allowlist hides `section`'s apps: it's enabled and its
+    /// divider is collapsed. The Lynx Shelf shows a section without
+    /// expanding its divider, so its apps stay hidden from the bar.
+    private static func hides(_ section: MenuBarSection) -> Bool {
+        section.isEnabled && section.controlItem.state == .hideSection
     }
 
     /// Lifts the restriction, so every icon is drawn, and drops queued work.
@@ -164,6 +210,7 @@ final class HostedVisibilityManager {
         waitingJobs = 0
         coveredBundleIdentifiers = nil
         applied = AppliedState(hidesHidden: false, hidesAlwaysHidden: false)
+        temporaryReveals.removeAll()
         allowlist.clear()
     }
 
@@ -218,14 +265,17 @@ final class HostedVisibilityManager {
         return result
     }
 
-    private func enqueue() {
+    /// Queues a job that runs `prepare`, then applies the allowlist, and
+    /// returns it, or `nil` once applying failed.
+    @discardableResult
+    private func enqueue(prepare: ((HostedVisibilityManager) -> Void)? = nil) -> Task<Void, Never>? {
         guard !isStopped else {
-            return
+            return nil
         }
         let previous = tail
         let myGeneration = generation
         waitingJobs += 1
-        tail = Task { [weak self] in
+        let job = Task { [weak self] in
             await previous?.value
             guard let self, generation == myGeneration else {
                 return
@@ -234,8 +284,11 @@ final class HostedVisibilityManager {
             guard !isStopped else {
                 return
             }
+            prepare?(self)
             await update(generation: myGeneration)
         }
+        tail = job
+        return job
     }
 
     /// Applies the allowlist for the sections' states as they are now.
@@ -246,8 +299,8 @@ final class HostedVisibilityManager {
         let hiddenSection = menuBarManager.section(withName: .hidden)
         let alwaysHiddenSection = menuBarManager.section(withName: .alwaysHidden)
         let state = AppliedState(
-            hidesHidden: hiddenSection.map { $0.isEnabled && $0.isHidden } ?? false,
-            hidesAlwaysHidden: alwaysHiddenSection.map { $0.isEnabled && $0.isHidden } ?? false
+            hidesHidden: hiddenSection.map(Self.hides) ?? false,
+            hidesAlwaysHidden: alwaysHiddenSection.map(Self.hides) ?? false
         )
 
         if needsFirstRead {
@@ -268,6 +321,8 @@ final class HostedVisibilityManager {
         if state.hidesAlwaysHidden {
             excluded.formUnion(sets.alwaysHidden)
         }
+        let revealedForNow = temporaryReveals.values.reduce(into: Set<String>()) { $0.formUnion($1) }
+        excluded.subtract(revealedForNow)
         guard !excluded.isEmpty else {
             if applied?.hidesAny ?? false {
                 Self.logger.debug("Nothing to hide: clearing the allowlist")
@@ -291,8 +346,14 @@ final class HostedVisibilityManager {
         }
         var candidates = lastListedBundleIdentifiers
         candidates.formUnion(Self.bundleIdentifiers(of: NSWorkspace.shared.runningApplications))
+        candidates.formUnion(revealedForNow)
+        // Apps revealed for now are hidden by neither set.
+        let visibleSets = HostedSectionSets(
+            hidden: sets.hidden.subtracting(revealedForNow),
+            alwaysHidden: sets.alwaysHidden.subtracting(revealedForNow)
+        )
         let allowed = HostedSections.allowlist(
-            sets: sets,
+            sets: visibleSets,
             hidesHidden: state.hidesHidden,
             hidesAlwaysHidden: state.hidesAlwaysHidden,
             candidates: candidates,

@@ -33,22 +33,23 @@ final class GeneralSettings: ObservableObject {
 
     /// A Boolean value that indicates whether the Lynx Shelf is in use.
     ///
-    /// Always `false` on macOS 27, where menu bar items can't be listed yet.
-    /// There the setting opens the system's overflow instead (see
-    /// ``showsSystemOverflow``).
+    /// On macOS 27 the Lynx Shelf needs the allowlist, which hides the
+    /// apps it shows. Without it, the setting opens the system's overflow
+    /// instead (see ``showsSystemOverflow``).
     var isLynxShelfActive: Bool {
         if #available(macOS 27.0, *) {
-            return false
+            return useLynxShelf && HostedAllowlist.isAvailable
         }
         return useLynxShelf
     }
 
     /// A Boolean value that indicates whether showing the hidden section
     /// also opens the system's overflow (`«`), for the items that still
-    /// don't fit. This stands in for the Lynx Shelf on macOS 27.
+    /// don't fit. This stands in for the Lynx Shelf on macOS 27 when the
+    /// allowlist can't be used.
     var showsSystemOverflow: Bool {
         if #available(macOS 27.0, *) {
-            return useLynxShelf
+            return useLynxShelf && !HostedAllowlist.isAvailable
         }
         return false
     }

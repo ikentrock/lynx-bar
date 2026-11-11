@@ -57,8 +57,8 @@ macOS 27 draws every menu bar item in one window and has no official way to hide
 - **Other menu bar managers.** Don't run another manager that uses the same facility (Hidden Bar, Stash) at the same time.
 - **Recovery.** Quitting Lynx Bar brings every icon back.
 - **Fallback.** If macOS removes the facility (or Lynx Bar doesn't run from `/Applications`), Lynx Bar falls back to letting macOS decide: every item shows while there's room, and the rest go into the `«`. "Show on hover" is off entirely in the fallback.
-- **Lynx Shelf.** With "Use Lynx Shelf" on, showing the hidden section also opens the `«` for items that don't fit, with or without the facility.
+- **Lynx Shelf.** With "Use Lynx Shelf" on and the facility working, hidden items show in a bar below the menu bar. Opening it draws the hidden icons in the menu bar for a moment to capture them. Clicking an icon shows that app in the menu bar and opens its menu; it hides again once the menu closes. Both buttons do the same, since macOS only lets Lynx Bar press an icon. To move an item to another section, turn the Shelf off, show the hidden items and ⌘-drag it. Without the facility, "Use Lynx Shelf" opens the `«` for items that don't fit instead.
 
-Lynx Bar can't list menu bar items on macOS 27 yet, so search and the Menu Bar Layout pane are turned off there and the Lynx Shelf can't show its own bar. "Show on hover" works from the Lynx icon only, and only while hiding through the facility works.
+Lynx Bar can't list menu bar items on macOS 27 yet, so search and the Menu Bar Layout pane are turned off there. "Show on hover" works from the Lynx icon only, and only while hiding through the facility works.
 
 If the Lynx icon ends up inside the `«`, open the `«` and ⌘-drag the Lynx icon out to the right.

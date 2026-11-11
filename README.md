@@ -56,8 +56,13 @@ MenuBarAgent's allowlist, a private macOS facility that other menu bar managers 
   system's `«` overflow, where macOS decides what's hidden by what fits.
 - Apple's own icons can't be chosen, and Now Playing and Focus also hide while a section is
   hidden.
-- Search, the Menu Bar Layout pane and the Lynx Shelf aren't available on macOS 27 yet,
-  because the system doesn't let apps list other apps' items.
+- The Lynx Shelf works on macOS 27 while hiding through the allowlist works. Opening it
+  draws the hidden icons in the menu bar for a moment to capture them, and clicking one
+  shows that app's icon in the menu bar until its menu closes. To move an item to another
+  section, turn the Shelf off, show the hidden items and ⌘-drag it. Without the allowlist,
+  "Use Lynx Shelf" opens the `«` instead.
+- Search and the Menu Bar Layout pane aren't available on macOS 27 yet, because the system
+  doesn't let apps list other apps' items.
 
 Since the facility is private, a macOS update could change it. If it stops working, Lynx
 Bar falls back to the `«` overflow. See [FREQUENT_ISSUES.md](FREQUENT_ISSUES.md) for more.

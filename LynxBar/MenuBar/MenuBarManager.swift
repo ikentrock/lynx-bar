@@ -88,6 +88,12 @@ final class MenuBarManager: ObservableObject {
         hostedVisibility = nil
     }
 
+    /// The allowlist manager on macOS 27, if it's in use.
+    @available(macOS 27.0, *)
+    var hostedVisibilityManager: HostedVisibilityManager? {
+        hostedVisibility as? HostedVisibilityManager
+    }
+
     /// The bundle identifiers of the hidden apps that are being shown now on
     /// macOS 27, or an empty set if the allowlist isn't in use.
     var hostedRevealedBundleIdentifiers: Set<String> {

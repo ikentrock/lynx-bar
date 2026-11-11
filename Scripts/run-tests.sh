@@ -39,6 +39,9 @@ run HostedOverflow
 build HostedSections ../LynxBar/MenuBar/ControlItem/HostedSections.swift
 run HostedSections
 
+build HostedShelfLayout ../LynxBar/MenuBar/ControlItem/HostedSections.swift ../LynxBar/MenuBar/LynxShelf/HostedShelfLayout.swift
+run HostedShelfLayout
+
 ../Scripts/check-names.sh || failed=1
 
 exit $failed
